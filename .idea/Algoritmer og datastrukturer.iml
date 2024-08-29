@@ -5,9 +5,12 @@
       <sourceFolder url="file://$MODULE_DIR$/Oving_1/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/TEST/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/oving/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/o1/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/Oving_1/target" />
       <excludeFolder url="file://$MODULE_DIR$/TEST/target" />
       <excludeFolder url="file://$MODULE_DIR$/oving/target" />
+      <excludeFolder url="file://$MODULE_DIR$/o2/target" />
+      <excludeFolder url="file://$MODULE_DIR$/o1/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

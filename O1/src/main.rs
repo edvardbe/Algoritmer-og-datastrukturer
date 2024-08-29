@@ -34,7 +34,7 @@ fn maximum_subarray(numbers: &[i32]) -> i32 {
 fn random_array(number: &i32) -> Vec<i32> {
     let mut rng = rand::thread_rng();
     let mut numbers = Vec::new();
-    for _ in 0..10 {
+    for _ in 0..*number {
         numbers.push(rng.gen_range(-10..10));
     }
     return numbers;
@@ -45,4 +45,7 @@ fn main() {
     let num = vec![-1, 3, -9, 2, 2, -1, 2, -1, -5];
 
     maximum_subarray(&num);
+
+    let numbers = random_array(&10);
+    maximum_subarray(&numbers);
 }

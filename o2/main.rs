@@ -39,7 +39,12 @@ fn main() {
         start = Instant::now();
         result = recursive_exponent_v1(base, *exponent);
         duration = start.elapsed();
-        println!("Time elapsed in recursive_exponent_v1(), {} ^ {} is: {:?}\n", base, *exponent, duration);
+        if result < 1000000000.0 {
+            println!("Time elapsed in recursive_exponent_v2(), {} ^ {} = {} is: {:?}\n", base, *exponent, result, duration);
+        }
+        else {
+            println!("Time elapsed in recursive_exponent_v2(), {} ^ {} is: {:?}\n", base, *exponent, duration);
+        }
     }
 
     println!("-----------Method 2----------\n");
@@ -48,7 +53,12 @@ fn main() {
         start = Instant::now();
         result = recursive_exponent_v2(base, *exponent);
         duration = start.elapsed();
-        println!("Time elapsed in recursive_exponent_v2(), {} ^ {} is: {:?}\n", base, *exponent, duration);
+        if result < 1000000000.0 {
+            println!("Time elapsed in recursive_exponent_v2(), {} ^ {} = {} is: {:?}\n", base, *exponent, result, duration);
+        }
+        else {
+            println!("Time elapsed in recursive_exponent_v2(), {} ^ {} is: {:?}\n", base, *exponent, duration);
+        }
     }
 
     println!("-----------.pow()----------\n");
@@ -57,6 +67,11 @@ fn main() {
         start = Instant::now();
         result = base.powf(*exponent as u32 as f64);
         duration = start.elapsed();
-        println!("Time elapsed in base.pow(), {} ^ {} is: {:?}\n", base, *exponent, duration);
+        if result < 1000000000.0 {
+            println!("Time elapsed in recursive_exponent_v2(), {} ^ {} = {} is: {:?}\n", base, *exponent, result, duration);
+        }
+        else {
+            println!("Time elapsed in recursive_exponent_v2(), {} ^ {} is: {:?}\n", base, *exponent, duration);
+        }
     }
 }

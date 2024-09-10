@@ -1,9 +1,5 @@
 package o3;
 
-import java.util.function.BiFunction;
-import java.nio.channels.Pipe.SourceChannel;
-import java.util.Arrays;
-
 public class Exercise3 {
 
 

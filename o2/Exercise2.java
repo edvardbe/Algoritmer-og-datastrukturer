@@ -1,7 +1,6 @@
 package o2;
 
 import java.lang.Math;
-import java.util.function.BiFunction;
 public class Exercise2 {
     
     public static void main(String[] args) {
@@ -57,16 +56,5 @@ public class Exercise2 {
         }
     }
 
-    private static void timeTaker(BiFunction<Double, Integer, Double> function, double x, int n) {
-        long start = System.nanoTime();
-        double result;
-        do{
-            result = function.apply(x, n);
-        } while (System.nanoTime() - start < 1000000000);
-        
-        long duration = System.nanoTime() - start;
-        System.out.println("Time elapsed in " + function + ", " + result + " is: " + duration + " ns\n");
-    }
-    
 }
 

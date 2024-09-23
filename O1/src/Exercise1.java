@@ -1,4 +1,4 @@
-package o1;
+package o1.src;
 import java.util.Random;
 
 public class Exercise1{

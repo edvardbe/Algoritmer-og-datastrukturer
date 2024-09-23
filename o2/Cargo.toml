@@ -1,7 +1,3 @@
-[[bin]]
-name = "o2"
-path = "main.rs"
-
 [package]
 name = "o2"
 version = "0.1.0"

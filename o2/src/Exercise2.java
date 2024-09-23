@@ -1,4 +1,4 @@
-package o2;
+package o2.src;
 
 import java.lang.Math;
 public class Exercise2 {

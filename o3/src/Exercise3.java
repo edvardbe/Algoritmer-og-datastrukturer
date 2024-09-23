@@ -1,7 +1,8 @@
-package o3;
+package o3.src;
+
+import o4.src.HashTable;
 
 public class Exercise3 {
-
 
     private static int[] randomArray(int n){
         int[] arr = new int[n];

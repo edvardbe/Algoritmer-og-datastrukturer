@@ -1,6 +1,5 @@
 package o3.src;
 
-import o4.src.HashTable;
 
 public class Exercise3 {
 

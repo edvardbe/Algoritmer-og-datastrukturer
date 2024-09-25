@@ -1,37 +1,38 @@
 package o4.src;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class Exercise4 {
-    private static HashTable<String> readFromFile(String path){
-            
-        int length = 0;
+    private static List<String> readFromFile(String path){
         List<String> list = new ArrayList<>();
         try {
-            java.io.File file = new java.io.File(path);
-            java.util.Scanner scanner = new java.util.Scanner(file);
+            File file = new File(path);
+            Scanner scanner = new Scanner(file);
             while (scanner.hasNextLine()) {
-                length++;
                 list.add(scanner.nextLine());
             }
             scanner.close();
-        } catch (java.io.FileNotFoundException e) {
+        } catch (FileNotFoundException e) {
             System.out.println("File not found");
         }
-        HashTable<String> hashTable = new HashTable<String>(length);
-        for (String string : list) {
-            hashTable.put(string);
-        }
-        return hashTable;
+        return list;
     }
+
     public static void main(String[] args) {
         
         
+        List<String> list = readFromFile("o4/src/navn.txt");
+        HashTable<String> hashTabel = new HashTable<>(list.size());
+        hashTabel.hashList(list);
         
-        HashTable<String> hashTabel = readFromFile("o4/src/navn.txt");
-        System.out.println(hashTabel.get("Victor Udnæs"));
-
+        hashTabel.print();
+        System.out.println("Hashtable contains entire dataset: " + hashTabel.checkContent(list));
+        System.out.println(hashTabel.get("Edvard Berdal Eek"));
     }
     
 }

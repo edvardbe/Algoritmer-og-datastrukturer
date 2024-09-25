@@ -1,15 +1,14 @@
 package o4.src;
 
+import java.util.List;
 
 public class HashTable<V> {
-    private HashNode<V>[] tabel;
+    private HashNode<V>[] table;
     private Class<?> type;
-    private int size;
     private int collision = 0;
 
     public HashTable(int size){
-        this.tabel = new HashNode[size];
-        this.size = size;
+        this.table = new HashNode[size];
     }
 
         
@@ -28,7 +27,7 @@ public class HashTable<V> {
         if(index == -1){
             throw new IllegalArgumentException("Value not found");
         }
-        tabel[index] = null;
+        table[index] = null;
     }
 
     public V get(V value){
@@ -36,7 +35,7 @@ public class HashTable<V> {
         if(index == -1){
             throw new IllegalArgumentException("Key not found");
         }
-        HashNode<V> node = tabel[index];
+        HashNode<V> node = table[index];
         while (!node.getData().equals(value) && node.getNext() != null) {
             node = node.getNext();
         }
@@ -51,21 +50,64 @@ public class HashTable<V> {
             sum += c * counter;
             counter++;
         }
-        return sum % tabel.length;
+        return sum % table.length;
           
     }
 
+    public void hashList(List<V> list){
+        for (V v : list) {
+            put(v);
+        }
+    }
+
     private void putVal(int hash, V value){
-        if (tabel[hash] == null) {
-            tabel[hash] = new HashNode<V>(value);
+        if (table[hash] == null) {
+            table[hash] = new HashNode<V>(value);
+        } 
+        else if (table[hash].getData().equals(value)) {
+            return;
         } else {
-            HashNode<V> node = tabel[hash];
+            collision++;
+            HashNode<V> node = table[hash];
             while (node.getNext() != null) {
                 node = node.getNext();
-                collision++;
             }
             node.setNext(new HashNode<V>(value));
-            System.out.println(collision);
         }
+    }
+
+    public boolean checkContent(List<V> list){
+        int counter = 0;
+        for (V v : list) {
+            counter++;
+            V value = get(v);
+            if (value == null) {
+                return false;
+            }
+        }
+        System.out.println(counter);
+        return true;
+    }
+
+    public void print(){
+
+        for (int i = 0; i < table.length; i++) {
+            if (table[i] != null) {
+                HashNode<V> node = table[i];
+                while (node != null) {
+                    V data = node.getData();
+                    System.out.print(data + " : " + hash(data));
+                    if (node.getNext() != null) {
+                        System.out.print(" -> ");
+                    }
+                    node = node.getNext();
+                }
+                System.out.println("\n");
+            }
+        }
+        System.out.println("Collisions: " + collision + "\n");
+        System.out.println("Load factor: " + (double) (table.length - collision) / table.length);
+        System.out.println("Average collision per persion: " + (double) collision / table.length);
+
     }
 }

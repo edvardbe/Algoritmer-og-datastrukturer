@@ -1,4 +1,4 @@
-package o4.src;
+package o4.src.Del1;
 
 public class HashNode<V> {
 

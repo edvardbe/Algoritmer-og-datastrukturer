@@ -1,4 +1,4 @@
-package o4.src;
+package o4.src.Del1;
 
 import java.util.List;
 
@@ -6,6 +6,7 @@ public class HashTable<V> {
     private HashNode<V>[] table;
     private Class<?> type;
     private int collision = 0;
+    private int dataCounter = 0;
 
     public HashTable(int size){
         this.table = new HashNode[size];
@@ -28,6 +29,7 @@ public class HashTable<V> {
             throw new IllegalArgumentException("Value not found");
         }
         table[index] = null;
+        dataCounter--;
     }
 
     public V get(V value){
@@ -63,6 +65,7 @@ public class HashTable<V> {
     private void putVal(int hash, V value){
         if (table[hash] == null) {
             table[hash] = new HashNode<V>(value);
+            dataCounter++;
         } 
         else if (table[hash].getData().equals(value)) {
             return;
@@ -73,19 +76,17 @@ public class HashTable<V> {
                 node = node.getNext();
             }
             node.setNext(new HashNode<V>(value));
+            dataCounter++;
         }
     }
 
     public boolean checkContent(List<V> list){
-        int counter = 0;
         for (V v : list) {
-            counter++;
             V value = get(v);
             if (value == null) {
                 return false;
             }
         }
-        System.out.println(counter);
         return true;
     }
 
@@ -106,8 +107,8 @@ public class HashTable<V> {
             }
         }
         System.out.println("Collisions: " + collision + "\n");
-        System.out.println("Load factor: " + (double) (table.length - collision) / table.length);
-        System.out.println("Average collision per persion: " + (double) collision / table.length);
+        System.out.println("Load factor: " + (double) (dataCounter - collision) / table.length);
+        System.out.println("Average collision per person: " + (double) collision / table.length);
 
     }
 }

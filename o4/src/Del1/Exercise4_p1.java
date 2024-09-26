@@ -1,4 +1,5 @@
-package o4.src;
+package o4.src.Del1;
+
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -7,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class Exercise4 {
+public class Exercise4_p1 {
     private static List<String> readFromFile(String path){
         List<String> list = new ArrayList<>();
         try {
@@ -29,10 +30,13 @@ public class Exercise4 {
         List<String> list = readFromFile("o4/src/navn.txt");
         HashTable<String> hashTabel = new HashTable<>(list.size());
         hashTabel.hashList(list);
-        
+        System.out.println("------------------ Part 1 ------------------");
         hashTabel.print();
         System.out.println("Hashtable contains entire dataset: " + hashTabel.checkContent(list));
         System.out.println(hashTabel.get("Edvard Berdal Eek"));
+        System.out.println("--------------------------------------------\n");
+        
+        
     }
     
 }

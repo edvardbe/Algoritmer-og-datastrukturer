@@ -3,16 +3,16 @@ package o4.src.Del2;
 public class HashTable {
     private int[] table;
     private int collision = 0;
-    private int size;
+    private int length;
 
-    public HashTable(int size){
-        this.size = calculateSize(size);
-        this.table = new int[this.size];
+    public HashTable(int length){
+        this.length = calculateSize(length);
+        this.table = new int[this.length];
         
     }
 
-    private int calculateSize(int size){
-        return (int) Math.pow(2, Math.ceil(Math.log(size)/Math.log(2)));
+    private int calculateSize(int length){
+        return Integer.highestOneBit(length) << 1;
     }    
 
     public void put(int value){
@@ -22,8 +22,8 @@ public class HashTable {
         } else {
             collision++;
             int i = 1;
-            while (i < size) {
-                int h2 = ((modHash(value) * i + h1) % (size - 1) + (size - 1)) % (size - 1);
+            while (i < length) {
+                int h2 = ((modHash(value) * i + h1) % (length - 1) + (length - 1)) % (length - 1);
                 if(table[h2] == 0) {
                     table[h2] = value;
                     break;
@@ -43,8 +43,8 @@ public class HashTable {
             return;
         }
         int i = 1;
-        while (i < size ) {
-            int h2 = ((modHash(value) * i + h1) % (size - 1) + (size - 1)) % (size - 1);
+        while (i < length ) {
+            int h2 = ((modHash(value) * i + h1) % (length - 1) + (length - 1)) % (length - 1);
             if(table[h2] == value){
                 table[h2]= 0;
                 return;
@@ -60,8 +60,8 @@ public class HashTable {
         }
        
         int i = 1;
-        while (i < size ) {
-            int h2 = ((modHash(value) * i + h1) % (size - 1) + (size - 1)) % (size - 1);
+        while (i < length ) {
+            int h2 = ((modHash(value) * i + h1) % (length - 1) + (length - 1)) % (length - 1);
             if (table[h2] == value) {
                 return table[h2];
             }
@@ -77,8 +77,8 @@ public class HashTable {
         }
         
         int i = 1;
-        while (i < size ) {
-            int h2 = (modHash(value) * i + h1) % (size - 1);
+        while (i < length ) {
+            int h2 = (modHash(value) * i + h1) % (length - 1);
             if (table[h2] == value) {
                 return h2 ;
             }
@@ -90,11 +90,11 @@ public class HashTable {
     private int multiHash(int value){
         double A = value * (Math.sqrt(5.0) - 1.0) / 2.0;
         A = A - (int) A;
-        return (int) (size * Math.abs(A)); 
+        return (int) (length * Math.abs(A)); 
     }
     private int modHash(int value){
-        int result = (2*Math.abs(value) + 1) % (size - 1);
-        return result < 0 ? result + (size - 1) : result;
+        int result = (2*Math.abs(value) + 1) % (length - 1);
+        return result < 0 ? result + (length - 1) : result;
     }
 
     public void hashList(int[] array){
@@ -115,19 +115,15 @@ public class HashTable {
 
     public void print(){
         int nullCounter = 0;
-        for (int i = 0; i < size ; i++) {
-            if (table[i] != 0) {
-                int value = table[i];
-                System.out.print(value + " index: " + getHash(value));
-            }
-            else {
+        for (int i = 0; i < length ; i++) {
+            if (table[i] == 0) {
                 nullCounter++;
             }
-            System.out.println("\n");
         }
         System.out.println("Collisions: " + collision);
-        System.out.println("Load factor: " + (double) (size - nullCounter) / size );
-        System.out.println("Average collision per data: " + (double) collision / size );
+        System.out.println("Length of table: " + length);
+        System.out.println("Load factor: " + (double) (length - nullCounter) / length );
+        System.out.println("Average collision per data: " + (double) collision / length );
 
     }
 }

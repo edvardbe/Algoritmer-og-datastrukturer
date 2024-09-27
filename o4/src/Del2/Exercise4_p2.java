@@ -14,7 +14,7 @@ public class Exercise4_p2 {
         }
         return list;
     }
-    private static void runTests(int runs, boolean containsTestNumber, boolean containsEntireDataset, List<Integer> notFound, int fillTime, int findTime, int fillTimeJava, int findTimeJava){
+    private static void printTests(int runs, boolean containsTestNumber, boolean containsEntireDataset, List<Integer> notFound, long fillTime, long findTime, long fillTimeJava, long findTimeJava, HashTable hashTable){
         System.out.println("------------------ Part 2 ------------------");
         System.out.print("Our hashtable contains entire dataset: ");
         
@@ -26,6 +26,8 @@ public class Exercise4_p2 {
             }
         }
         System.out.println("Our hashtable contains test number: " + containsTestNumber);
+
+        hashTable.print();
 
         System.out.println("Time to fill our table: " + fillTime / runs + "ms");
 
@@ -56,7 +58,6 @@ public class Exercise4_p2 {
         int testNumber = 5035; 
         int LIST_SIZE = 10_000_000;
         
-
         for(int j = 1; j <= runs; j++){
             System.out.println("Run: " + (j));
             
@@ -66,26 +67,26 @@ public class Exercise4_p2 {
             for (int i = 0; i < list.length; i++) {
                 hashTabel.put(list[i]);
             }
-            fillTime += (int) (System.nanoTime() - fillStart) / 1000000;
+            fillTime += ((int) (System.nanoTime() - fillStart) / 1000000);
 
             HashMap<Integer, Integer> javaHash = new HashMap<>();
             long fillStartJava = System.nanoTime();
             for (int i = 0; i < list.length; i++) {
                 javaHash.put(list[i], i);
             }
-            fillTimeJava += (int) (System.nanoTime() - fillStartJava) / 1000000;;
+            fillTimeJava += (int) ((System.nanoTime() - fillStartJava) / 1000000);
 
             long findStart = System.nanoTime();
             for (int i = 0; i < list.length; i++) {
                 hashTabel.get(list[i]);
             }
-            findTime += (int) (System.nanoTime() - findStart) / 1000000;
+            findTime += (int) ((System.nanoTime() - findStart) / 1000000);
 
             long findStartJava = System.nanoTime();
             for (int i = 0; i < list.length; i++) {
                 javaHash.get(list[i]);
             }
-            findTimeJava += (int) (System.nanoTime() - findStartJava) / 1000000;
+            findTimeJava += (int) ((System.nanoTime() - findStartJava) / 1000000);
 
             int notFoundNumber = hashTabel.checkContent(list);
             if (notFoundNumber != -1) {
@@ -96,7 +97,7 @@ public class Exercise4_p2 {
                 containsTestNumber = hashTabel.get(testNumber) == testNumber;
             }
             if (j == 1 || j == 10){
-                runTests(j, containsTestNumber, containsEntireDataset, notFound, fillTime, findTime, fillTimeJava, findTimeJava);
+                printTests(j, containsTestNumber, containsEntireDataset, notFound, fillTime, findTime, fillTimeJava, findTimeJava, hashTabel);
             }
 
         }

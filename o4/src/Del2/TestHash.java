@@ -8,7 +8,6 @@ class TestHash {
 
   public TestHash(int length) {
     arr = new int[(int) Math.pow(2, Math.ceil(Math.log(length)/Math.log(2)))];
-    System.out.println(arr.length);
     kollisjon = 0;
   }
 
@@ -117,7 +116,8 @@ public void print(){
 
     int range = 10_000_000;
     int find = 15;
-    TestHash ht = new TestHash(range);
+    for (int p = 1; p <= 10; p++){
+      TestHash ht = new TestHash(range);
 
     long start;
     long end;
@@ -152,4 +152,5 @@ public void print(){
             System.out.println("No");
         }
   }
+}
 }

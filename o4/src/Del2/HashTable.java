@@ -16,14 +16,14 @@ public class HashTable {
     }    
 
     public void put(int value){
-        int h1 = multiHash(value);
+        int h1 = multiplicativeHash(value);
         if(table[h1] == 0){
             table[h1] = value;
         } else {
             collision++;
             int i = 1;
             while (i < length) {
-                int h2 = ((modHash(value) * i + h1) % (length - 1) + (length - 1)) % (length - 1);
+                int h2 = ((moduloHash(value) * i + h1) % (length - 1) + (length - 1)) % (length - 1);
                 if(table[h2] == 0) {
                     table[h2] = value;
                     break;
@@ -37,14 +37,14 @@ public class HashTable {
     }
 
     public void remove(int value){
-        int h1 = multiHash(value);
+        int h1 = multiplicativeHash(value);
         if(table[h1] == value){
             table[h1] = 0;
             return;
         }
         int i = 1;
         while (i < length ) {
-            int h2 = ((modHash(value) * i + h1) % (length - 1) + (length - 1)) % (length - 1);
+            int h2 = ((moduloHash(value) * i + h1) % (length - 1) + (length - 1)) % (length - 1);
             if(table[h2] == value){
                 table[h2]= 0;
                 return;
@@ -54,14 +54,14 @@ public class HashTable {
     }
 
     public int get(int value){
-        int h1 = multiHash(value);
+        int h1 = multiplicativeHash(value);
         if(table[h1] == value){
             return value;
         }
        
         int i = 1;
         while (i < length ) {
-            int h2 = ((modHash(value) * i + h1) % (length - 1) + (length - 1)) % (length - 1);
+            int h2 = ((moduloHash(value) * i + h1) % (length - 1) + (length - 1)) % (length - 1);
             if (table[h2] == value) {
                 return table[h2];
             }
@@ -71,14 +71,14 @@ public class HashTable {
     }
 
     private int getHash(int value){
-        int h1 = multiHash(value);
+        int h1 = multiplicativeHash(value);
         if(table[h1] == value){
             return h1;
         }
         
         int i = 1;
         while (i < length ) {
-            int h2 = (modHash(value) * i + h1) % (length - 1);
+            int h2 = (moduloHash(value) * i + h1) % (length - 1);
             if (table[h2] == value) {
                 return h2 ;
             }
@@ -87,13 +87,13 @@ public class HashTable {
         return -1;
     }
 
-    private int multiHash(int value){
+    private int multiplicativeHash(int value){
         double A = value * (Math.sqrt(5.0) - 1.0) / 2.0;
         A = A - (int) A;
         return (int) (length * Math.abs(A)); 
     }
-    private int modHash(int value){
-        int result = (2*Math.abs(value) + 1) % (length - 1);
+    private int moduloHash(int value){
+        int result = (2 * Math.abs(value) + 1) % (length - 1);
         return result < 0 ? result + (length - 1) : result;
     }
 
@@ -113,17 +113,11 @@ public class HashTable {
         return -1;
     }
 
-    public void print(){
-        int nullCounter = 0;
-        for (int i = 0; i < length ; i++) {
-            if (table[i] == 0) {
-                nullCounter++;
-            }
-        }
-        System.out.println("Collisions: " + collision);
-        System.out.println("Length of table: " + length);
-        System.out.println("Load factor: " + (double) (length - nullCounter) / length );
-        System.out.println("Average collision per data: " + (double) collision / length );
+    public int getCollisions() {
+        return collision;
+    }
 
+    public int getLength() {
+        return length;
     }
 }

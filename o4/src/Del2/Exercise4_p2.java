@@ -14,8 +14,11 @@ public class Exercise4_p2 {
         }
         return list;
     }
-    private static void printTests(int runs, boolean containsTestNumber, boolean containsEntireDataset, List<Integer> notFound, long fillTime, long findTime, long fillTimeJava, long findTimeJava, HashTable hashTable){
+    private static void printTests(int dataAmount, int collisions, int runs, boolean containsTestNumber, boolean containsEntireDataset, List<Integer> notFound, long fillTime, long findTime, long fillTimeJava, long findTimeJava, HashTable hashTable){
+        int length = hashTable.getLength();
         System.out.println("------------------ Part 2 ------------------");
+        System.out.println("Amount of data: " + dataAmount);
+        System.out.println("Length of Hashtable: " + length);
         System.out.print("Our hashtable contains entire dataset: ");
         
         if (containsEntireDataset) {
@@ -25,10 +28,14 @@ public class Exercise4_p2 {
                 System.out.println(" false, did not contain: " + i);
             }
         }
-        System.out.println("Our hashtable contains test number: " + containsTestNumber);
+        System.out.println("Our hashtable contains test number: " + containsTestNumber);        
+        System.out.println("\n-- Averages after '" + runs + "' runs: --\n");
 
-        hashTable.print();
+        System.out.println("Collisions: " + collisions / runs);
+        System.out.println("Load factor: " + (double) (length - (length - dataAmount)) / length);
+        System.out.println("Average collision per data: " + (double) collisions / (dataAmount * runs));
 
+        
         System.out.println("Time to fill our table: " + fillTime / runs + "ms");
 
         System.out.println("Time to fill Java's HashMap: " + fillTimeJava / runs + "ms \n");
@@ -47,7 +54,6 @@ public class Exercise4_p2 {
     public static void main(String[] args) {
 
         int runs = 10;
-
         int fillTime = 0;
         int findTime = 0;
         int fillTimeJava = 0;
@@ -57,6 +63,7 @@ public class Exercise4_p2 {
         List<Integer> notFound = new ArrayList<>();
         int testNumber = 5035; 
         int LIST_SIZE = 10_000_000;
+        int collisions = 0;
         
         for(int j = 1; j <= runs; j++){
             System.out.println("Run: " + (j));
@@ -96,9 +103,10 @@ public class Exercise4_p2 {
             if(containsTestNumber){
                 containsTestNumber = hashTabel.get(testNumber) == testNumber;
             }
-            if (j == 1 || j == 10){
-                printTests(j, containsTestNumber, containsEntireDataset, notFound, fillTime, findTime, fillTimeJava, findTimeJava, hashTabel);
-            }
+            collisions += hashTabel.getCollisions();
+            
+                printTests(LIST_SIZE, collisions, j, containsTestNumber, containsEntireDataset, notFound, fillTime, findTime, fillTimeJava, findTimeJava, hashTabel);
+            
 
         }
 

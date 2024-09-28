@@ -16,16 +16,20 @@ public class HashTable {
     }    
 
     public void put(int value){
-        int h1 = multiplicativeHash(value);
-        if(table[h1] == 0){
-            table[h1] = value;
+        int pos = multiplicativeHash(value);
+        if(table[pos] == 0){
+            table[pos] = value;
         } else {
             collision++;
             int i = 1;
+            int h2 = moduloHash(value);
             while (i < length) {
-                int h2 = ((moduloHash(value) * i + h1) % (length - 1) + (length - 1)) % (length - 1);
-                if(table[h2] == 0) {
-                    table[h2] = value;
+                if (pos == 0) {
+                    pos = 1;
+                }
+                pos = (pos + h2) % (length - 1);
+                if(table[pos] == 0) {
+                    table[pos] = value;
                     break;
                 } else {
                     i++;
@@ -37,16 +41,20 @@ public class HashTable {
     }
 
     public void remove(int value){
-        int h1 = multiplicativeHash(value);
-        if(table[h1] == value){
-            table[h1] = 0;
+        int pos = multiplicativeHash(value);
+        if(table[pos] == value){
+            table[pos] = 0;
             return;
         }
         int i = 1;
-        while (i < length ) {
-            int h2 = ((moduloHash(value) * i + h1) % (length - 1) + (length - 1)) % (length - 1);
-            if(table[h2] == value){
-                table[h2]= 0;
+        int h2 = moduloHash(value);
+        while (i < length) {
+            if (pos == 0) {
+                pos = 1;
+            }
+            pos = (pos + h2) % (length - 1);
+            if(table[pos] == value){
+                table[pos]= 0;
                 return;
             }
             i++;
@@ -54,16 +62,20 @@ public class HashTable {
     }
 
     public int get(int value){
-        int h1 = multiplicativeHash(value);
-        if(table[h1] == value){
+        int pos = multiplicativeHash(value);
+        if(table[pos] == value){
             return value;
         }
        
         int i = 1;
-        while (i < length ) {
-            int h2 = ((moduloHash(value) * i + h1) % (length - 1) + (length - 1)) % (length - 1);
-            if (table[h2] == value) {
-                return table[h2];
+        int h2 = moduloHash(value);
+        while (i < length) {
+            if (pos == 0) {
+                pos = 1;
+            }
+            pos = (pos + h2) % (length - 1);
+            if(table[pos] == value){
+                return table[pos];
             }
             i++;
         }
@@ -71,16 +83,20 @@ public class HashTable {
     }
 
     private int getHash(int value){
-        int h1 = multiplicativeHash(value);
-        if(table[h1] == value){
-            return h1;
+        int pos = multiplicativeHash(value);
+        if(table[pos] == value){
+            return pos;
         }
         
         int i = 1;
-        while (i < length ) {
-            int h2 = (moduloHash(value) * i + h1) % (length - 1);
-            if (table[h2] == value) {
-                return h2 ;
+        int h2 = moduloHash(value);
+        while (i < length) {
+            if (pos == 0) {
+                pos = 1;
+            }
+            pos = (pos + h2) % (length - 1);
+            if(table[pos] == value){
+                return pos;
             }
             i++;
         }

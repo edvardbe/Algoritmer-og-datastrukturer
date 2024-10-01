@@ -1,5 +1,5 @@
 use std::time::Instant;
-use num_format::{Locale, ToFormattedString};
+use std::collections::HashMap;
 use rand::Rng;
 struct HashTable {
     array: Vec<i32>,
@@ -9,8 +9,12 @@ struct HashTable {
 
 impl HashTable{
     fn new(length: usize ) -> HashTable{
-        let size = Self::calculate_size(length);
-        HashTable {array: Vec::with_capacity(size), collisions: 0, length: size}
+        let size = HashTable::calculate_size(length);
+        HashTable {
+            array: vec![0; HashTable::calculate_size(size)],
+            collisions: 0,
+            length: size,
+        }
     }
 
     fn calculate_size(mut length: usize) -> usize {
@@ -26,9 +30,9 @@ impl HashTable{
     }
 
     fn multiplicative_hash(&mut self, key: i32) -> usize {
-        let mut A = key as f32 * (f32::sqrt(5.0) - 1.0) / 2.0;
-        A = A - (A as i32) as f32;
-        self.length * (f32::abs(A) as usize)
+        let mut a = key as f32 * (f32::sqrt(5.0) - 1.0) / 2.0;
+        a = a - (a as i32) as f32;
+        self.length * (f32::abs(a) as usize)
         
     }
     fn modulo_hash(&mut self, key: i32) -> usize {
@@ -36,22 +40,47 @@ impl HashTable{
         return result as usize;
     }
     fn put(&mut self, key: i32){
-        let h1 = self.multiplicative_hash(key);
-        if self.array[h1] == 0 {
-            self.array[h1] = key;
+        let mut pos = self.multiplicative_hash(key);
+        if self.array[pos] == 0 {
+            self.array[pos] = key;
         } else {
             self.collisions = self.collisions + 1;
             let mut i = 1;
+            let h2 = self.modulo_hash(key);
+
             while i < self.length {
-                let h2 = ((self.modulo_hash(key) * i + h1) % (self.length - 1) + (self.length - 1)) % (self.length - 1);
-                if self.array[h2] == 0 {
-                    self.array[h2] = key;
+                pos = (pos + h2) % (self.length - 1);
+                if self.array[pos] == 0 {
+                    self.array[pos] = key;
                     break;
                 } else {
                     i = i + 1;
                     self.collisions = self.collisions + 1;
                 }
             }
+            
+        }
+
+    }
+    fn get(&mut self, key: &i32) -> i32{
+        let mut pos = self.multiplicative_hash(*key);
+        if self.array[pos] == *key {
+            return self.array[pos];
+        } else {
+            self.collisions = self.collisions + 1;
+            let mut i = 1;
+            let h2 = self.modulo_hash(*key);
+
+            while i < self.length {
+                pos = (pos + h2) % (self.length - 1);
+                if self.array[pos] == *key {
+                    return self.array[pos];
+                } else {
+                    i = i + 1;
+                    self.collisions = self.collisions + 1;
+                }
+            }
+            return -1;
             
         }
 
@@ -67,18 +96,49 @@ fn random_array(n: usize, range: i32) -> Vec<i32> {
     }
     arr
 }
-fn hash_list(array: Vec<i32>, mut hashTable: HashTable) {
+fn hash_list(array: &Vec<i32>, hash_table: &mut HashTable) {
     for i in array {
-        hashTable.put(i)
+        hash_table.put(*i)
     }
 }
+
 fn main() {
     let size = 10_000_000;
     let range = size * 5;
     let random_array = random_array(size, range as i32);
 
-    let mut hashTable = HashTable::new(size);
+    let mut hash_table = HashTable::new(size);
+    let mut hash_map = HashMap::new();
+    let mut start = Instant::now();
+    hash_list(&random_array, &mut hash_table);
+    let fill_time = start.elapsed();
 
-    hash_list(random_array, hashTable);
-    println!("test: ");
+    println!("Dataset size: {}", size);
+    println!("HashTable length: {}", hash_table.length);
+    println!("Time taken to fill HashTable: {:?}", fill_time);
+
+    start = Instant::now();
+    for i in 0..size{
+        hash_map.insert(&random_array[i], i);
+    }
+    let fill_map_time = start.elapsed();
+
+    println!("HashMap length: {}", hash_map.len());
+    println!("Time taken to fill HashMap: {:?}", fill_map_time);
+
+    start = Instant::now();
+    for i in &random_array{
+        hash_table.get(i);
+    }
+    let find_time = start.elapsed();
+
+    println!("Time taken to find all elements HashTable: {:?}", find_time);
+
+    start = Instant::now();
+    for i in &random_array{
+        hash_map.get(i);
+    }
+    let find_map_time = start.elapsed();
+
+    println!("Time taken to find all element HashMap: {:?}", find_map_time);
 }

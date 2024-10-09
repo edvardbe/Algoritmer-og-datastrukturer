@@ -34,3 +34,8 @@ m: tabellstørrelse
 
 ### Dobbel hashing
 Beste probe-metode!!
+
+- Dijkstra korteste vei algoritme
+	- Sortert tabell $O(KN)$
+	- Usortert tabell $O(N^{2})$
+	- Heap $O((K+N) log(N))$ å

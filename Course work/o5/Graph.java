@@ -28,15 +28,6 @@ public class Graph {
             this.id = id;
         }
 
-        @Override
-        public String toString() {
-            if (data instanceof Pre) {
-                Pre pre = (Pre) data;
-                return " " + (pre.depth - 1_000_000_000);  // Print relevant data from the Pre object
-            } else {
-                return "Node@" + Integer.toHexString(hashCode());  // Fallback to memory address
-            }
-        }
     }
 
     int N, E;
@@ -241,13 +232,12 @@ public class Graph {
 
     public static void main(String[] args) {
         Graph graph = new Graph();
-        List<int[]> list = read_from_file("ø5g6.txt");
+        List<int[]> list = read_from_file("ø5g2.txt");
         graph.init_graph(list);
 
         DFS_Pre dfsPre = graph.new DFS_Pre();
         dfsPre.DFS_init();
 
-        // Start DFS from a specific node, for example, the first node
         for (Node node : graph.nodes) {
             if(!node.visited){
                 dfsPre.DFS_Search(node);

@@ -21,9 +21,25 @@ public class Graph {
     class Node {
         Edge edge;
         Object data;
+        int id;
+        boolean visited = false;
+
+        public Node(int id){
+            this.id = id;
+        }
+
+        @Override
+        public String toString() {
+            if (data instanceof Pre) {
+                Pre pre = (Pre) data;
+                return " " + (pre.depth - 1_000_000_000);  // Print relevant data from the Pre object
+            } else {
+                return "Node@" + Integer.toHexString(hashCode());  // Fallback to memory address
+            }
+        }
     }
 
-    int N, K;
+    int N, E;
     Node[] nodes;
     public Graph(){};
     class Pre {
@@ -58,49 +74,91 @@ public class Graph {
             return ++time;
         }
         public void DFS_init() {
-            for (int i = N; i-- > 0;){
+            for (int i = 0; i < N; i++){
                 nodes[i].data = new DFS_Pre();
             }
             DFS_Pre.reset_time();
         }
-        public void DFS_Search(Node search_node) {
+        
+        public List<Node> DFS_Search(Node search_node) {
+            List<Node> sccNodes = new ArrayList<>();
             DFS_Pre n_pre = (DFS_Pre) search_node.data;
             n_pre.found_time = DFS_Pre.read_time();
-            for (Edge e = search_node.edge; e != null; e = e.next){
-                DFS_Pre m_pre = (DFS_Pre) e.to.data;
-                if(m_pre.found_time == 0) {
-                    m_pre.pre = search_node;
-                    m_pre.depth = n_pre.depth + 1;
-                    DFS_Search(e.to);
+            search_node.visited = true;
+            sccNodes.add(search_node);  // Add current node to the SCC list
+    
+            for (Edge e = search_node.edge; e != null; e = e.next) {
+                if (!e.to.visited) {
+                    DFS_Pre m_pre = (DFS_Pre) e.to.data;
+                    if (m_pre.found_time == 0) {
+                        m_pre.pre = search_node;
+                        m_pre.depth = n_pre.depth + 1;
+                        sccNodes.addAll(DFS_Search(e.to));  // Recursively collect nodes in SCC
+                    }
                 }
             }
             n_pre.finished_time = DFS_Pre.read_time();
+            return sccNodes;  // Return all nodes in this SCC
         }
+    
 
         public void DFS(Node s){
             DFS_init();
             ((DFS_Pre)s.data).depth = 0;
             DFS_Search(s);
         }
+
+        public List<Node> get_nodes_sorted_by_finished_time() {
+            List<Node> nodeList = new ArrayList<>();
+            
+            // Collect all nodes into the list
+            for (Node node : nodes) {
+                nodeList.add(node);
+            }
+
+            // Sort the nodes by their finished time
+            nodeList.sort((n1, n2) -> {
+                int t1 = ((DFS_Pre) n1.data).finished_time;
+                int t2 = ((DFS_Pre) n2.data).finished_time;
+                return Integer.compare(t2, t1);
+            });
+
+            return nodeList;  // Return the sorted list of nodes
+        }
     }
 
-    public void init_graph(String path){
-        List<int[]> list = read_from_file(path);
+    /**
+     * Initiates a graph using the {@link #read_from_file(String path)}
+     * method. Initiates N, amount of nodes, and E, amount of edges,
+     * and the array of nodes, nodes.
+     * @param path
+     */
+    public void init_graph(List<int[]> list){
         N = list.get(0)[0];
-        K = list.get(0)[1];
+        E = list.get(0)[1];
         this.nodes = new Node[N];
-        list.remove(0);
         for (int i = 0; i < N; i++) {
-            nodes[i] = new Node();
+            nodes[i] = new Node(i);
         }
 
-        for (int[] nums : list){
-            int from = nums[0];
-            int to = nums[1];
+        for (int i = 1; i < list.size(); i++){
+            int from = list.get(i)[0];
+            int to = list.get(i)[1];
             Edge e = new Edge(nodes[to], nodes[from].edge);
             nodes[from].edge = e;
         }
     }
+
+    /**
+     * Reads graph from file where each line 
+     * contains a two adjacent node. 
+     * The first and second integer in the first line is 
+     * the number of nodes, and number of edges respectively,
+     * but this is handeled in the {@link #init_graph(String path)}
+     * 
+     * @param path
+     * @return A list of integer arrays with length 2
+     */
     
     private static List<int[]> read_from_file(String path){
         String[] temp;
@@ -132,21 +190,100 @@ public class Graph {
         }
         return list;
     }
+        
+    public List<int[]> transpose_graph(List<int[]> list){
+        List<int[]> result = new ArrayList<>();
+        for(int i = 0; i < list.size(); i++){
+            int[] temp = new int[2];
+            temp[0] = list.get(i)[1];
+            temp[1] = list.get(i)[0];
+            if(i == 0){
+                temp = list.get(i);
+            }
+            result.add(temp);
+        }
+        return result;
+    }
+
+    public void reset_visited() {
+        for (Node node : nodes) {
+            node.visited = false;
+        }
+    }
+    
+
+    /**
+     * Prints a graph with each node and their adjacent nodes
+     * 
+     */ 
+    public void print_graph(){
+        for (int i = 0; i < N; i++){
+            System.out.print(i + ": ");
+            for (Edge e = nodes[i].edge; e != null; e = e.next){
+                System.out.print("-> " + e.to.id + " ");
+            }
+            System.out.println();
+        }
+    }
+    public void print_scc(){
+        for (int i = 0; i < N; i++){
+            System.out.print(i + ": ");
+            for (Edge e = nodes[i].edge; e != null; e = e.next){
+                if(!e.to.visited){
+                    System.out.print("-> " + e.to.id + " ");
+                }
+            }
+            System.out.println();
+        }
+    }
+
+    
 
     public static void main(String[] args) {
         Graph graph = new Graph();
-        graph.init_graph("ø5g2.txt");
+        List<int[]> list = read_from_file("ø5g6.txt");
+        graph.init_graph(list);
+
         DFS_Pre dfsPre = graph.new DFS_Pre();
         dfsPre.DFS_init();
 
         // Start DFS from a specific node, for example, the first node
-        Node startNode = graph.nodes[0];
-        dfsPre.DFS_Search(startNode);
-
-        // Optionally, you can print the DFS results
         for (Node node : graph.nodes) {
-            DFS_Pre nodePre = (DFS_Pre) node.data;
-            System.out.println("Found Time: " + nodePre.found_time + ", Finished Time: " + nodePre.finished_time);
+            if(!node.visited){
+                dfsPre.DFS_Search(node);
+            }
+        }
+        
+        // Get the nodes sorted by finished time (in descending order)
+        List<Node> time_nodes = dfsPre.get_nodes_sorted_by_finished_time();
+
+        // Transpose the graph
+        
+        List<int[]> transposedList = graph.transpose_graph(list);
+        graph.init_graph(transposedList);
+
+        // Reset visited for all nodes in the transposed graph
+        graph.reset_visited();
+
+        // Initialize DFS_Pre for the transposed graph
+        dfsPre.DFS_init();
+
+        System.out.println("Strongly Connected Components:");
+
+        int sccIndex = 1;
+        // Perform DFS on transposed graph in the order of decreasing finished time
+        for (Node node : time_nodes) {
+            if (!graph.nodes[node.id].visited) {
+                List<Node> scc = dfsPre.DFS_Search(graph.nodes[node.id]);  // Get all nodes in this SCC
+                // Print SCC index and nodes
+                System.out.print("SCC nr " + sccIndex + ": ");
+                for (Node sccNode : scc) {
+                    System.out.print(sccNode.id + " ");
+                }
+                System.out.println();  // Newline after each SCC
+                sccIndex++;
+            }
         }
     }
+
 }

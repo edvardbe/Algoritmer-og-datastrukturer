@@ -1,6 +1,9 @@
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.util.ArrayList;
@@ -72,73 +75,52 @@ public class Huffman {
      * @throws IOException Incase of input/output exception from file handling
      */
 
-    public static void compress(String input_path, String output_path) throws IOException{
+    public static byte[] compress(byte[] input_bytes) throws IOException{
         int length = 256;
         int[] frequencies= new int[length];
         
-        FileInputStream inputFile = new FileInputStream(input_path);
-        int numberOfBytes = inputFile.available();
-        for (int i = 0; i < numberOfBytes; i++) {
-            frequencies[inputFile.read()]++;
+        for (byte b : input_bytes) {
+            frequencies[b & 0xFF]++;
         }
-        inputFile.close();
         
         PriorityQueue<Node> priorityQueue = createHuffmanQueue(length, new HuffmanComparator(), frequencies);
         Node root = Node.createHuffmanTree(priorityQueue);
         root.createBitStrings(root, "");
     
-        FileInputStream inFile = new FileInputStream(input_path);
-        DataOutputStream outFile = new DataOutputStream(new FileOutputStream(output_path));
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        DataOutputStream out = new DataOutputStream(outStream);
 
         for (int frequency : frequencies) {
-            outFile.writeInt(frequency);
+            out.writeInt(frequency);
         }
 
-        int input;
         int writeByte = 0;
         int bitIteration = 0;
-        int j = 0;
         ArrayList<Byte> bytes = new ArrayList<>();
-        for (int k = 0; k < numberOfBytes; ++k) {
-            input = inFile.read();
-            j = 0;
-            String bitString = root.bitStrings[input];
-            while (j < bitString.length()) {
-                if (bitString.charAt(j) == '0'){
-                    // If the character at position j is '0' the byte is shifted by one to the left position
-                    // For example, if writeByte = 00000010 and we do a left bitshift, writeByte << 1,
-                    // it is now 00000100.
-                    writeByte = (writeByte << 1);
-                } else {
-                    // If the character at position j is not '0', in other words it is '1',
-                    // the byte is shifted by one to the left and the first position is a 1. For example, 
-                    // if writeByte = 00000010 and we do a left bitshift, (writeByte << 1) | 1,
-                    // it is now 00000101.
-                    writeByte = ((writeByte << 1) | 1);
-                }
-                ++j;
-                ++bitIteration;
-                 if (bitIteration == 8) {
-                    // If the bit iteration is 8 we have completed the byte and we 
-                    // can add the writeByte to the list of bytes. We also reset thje
+
+        for (byte b : input_bytes) {
+            String bitString = root.bitStrings[b & 0xFF];
+            for (char bit : bitString.toCharArray()) {
+                writeByte = (writeByte << 1) | (bit == '1' ? 1 : 0);
+                bitIteration++;
+                if (bitIteration == 8) {
                     bytes.add((byte) writeByte);
                     bitIteration = 0;
                     writeByte = 0;
                 }
             }
         }
-        int lastByte = bitIteration;
         while (bitIteration < 8 && bitIteration != 0) {
             writeByte = (writeByte << 1);
             ++bitIteration;
         }
         bytes.add((byte) writeByte);
-        outFile.write(lastByte);
         for (Byte s : bytes) {
-            outFile.write(s);
+            out.write(s);
         }
-        inFile.close();
-        outFile.close();
+        out.close();
+
+        return outStream.toByteArray();
     }
 
     /**
@@ -176,54 +158,61 @@ public class Huffman {
      * @throws IOException Incase of input/output exception from file handling
      */
 
-    public static void decompress(String input_path, String output_path) throws IOException {
+    public static byte[] decompress(byte[] input_bytes) throws IOException {
         int length = 256;
         int[] frequencies= new int[length];
-        DataInputStream inputFile = new DataInputStream(new FileInputStream(input_path));
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(input_bytes);
+        DataInputStream in = new DataInputStream(inputStream);
         
         for (int i = 0; i < length; i++) {
-            frequencies[i] = inputFile.readInt();
+            frequencies[i] = in.readInt();
         }
-        byte lastByte = inputFile.readByte();
+        //byte lastByte = in.readByte();
         
         PriorityQueue<Node> priorityQueue = createHuffmanQueue(length, new HuffmanComparator(), frequencies);
         Node root = Node.createHuffmanTree(priorityQueue);
 
-        FileOutputStream outFile = new FileOutputStream(output_path);
-        byte[] bytes = inputFile.readAllBytes();
-        inputFile.close();
-
-        int bytesLength = bytes.length;
-        Node currentNode = root;
-        int bitIndex;
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         
-        for (int byteIndex = 0; byteIndex < bytesLength; byteIndex++) {
-            byte currentByte = bytes[byteIndex];
-            bitIndex = (byteIndex == bytesLength - 1) ? lastByte : 8;
+        in.close();
 
-            for (int i = 7; i >= 8 - bitIndex; i--) {
+        Node currentNode = root;
+        byte currentByte;
+        
+        while (in.available() > 0) {
+            currentByte = in.readByte();
+            for (int i = 7; i >= 0; i--) {
                 int bit = (currentByte >> i) & 1;
                 currentNode = (bit == 0) ? currentNode.left : currentNode.right;
 
                 if (currentNode.left == null && currentNode.right == null) {
-                    outFile.write(currentNode.c); // Skriver tegnet til output
+                    outStream.write(currentNode.c); // Skriver tegnet til output
                     currentNode = root;
                 }
             }
         }
 
-        inputFile.close();
-        outFile.flush();
-        outFile.close();
+        return outStream.toByteArray();
 
     }
 
     public static void main(String[] args) {
         try {
-            compress("c-test.txt", "c-test.hec");
-            decompress("c-test.hec", "d-test.txt");
+            byte[] input_bytes = Files.readAllBytes(Paths.get("diverse.txt"));
+            byte[] compressed_bytes = compress(input_bytes);
+            FileOutputStream out = new FileOutputStream("diverse.hec");
+            out.write(compressed_bytes);
+            out.close();
+
+            input_bytes = Files.readAllBytes(Paths.get("diverse.hec"));
+            byte[] decompressed_bytes = decompress(input_bytes);
+            FileOutputStream outDecomp = new FileOutputStream("d-diverse.txt");
+            outDecomp.write(decompressed_bytes);
+            outDecomp.close();
+
         } catch (Exception e){
             System.out.println("Error: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

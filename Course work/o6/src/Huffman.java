@@ -77,7 +77,7 @@ public class Huffman {
 
     public static byte[] compress(byte[] input_bytes) throws IOException{
         int length = 256;
-        int[] frequencies= new int[length];
+        int[] frequencies = new int[length];
         
         for (byte b : input_bytes) {
             frequencies[b & 0xFF]++;
@@ -198,15 +198,15 @@ public class Huffman {
 
     public static void main(String[] args) {
         try {
-            byte[] input_bytes = Files.readAllBytes(Paths.get("diverse.txt"));
+            byte[] input_bytes = Files.readAllBytes(Paths.get("diverse.lyx"));
             byte[] compressed_bytes = compress(input_bytes);
             FileOutputStream out = new FileOutputStream("diverse.hec");
             out.write(compressed_bytes);
             out.close();
-
+    
             input_bytes = Files.readAllBytes(Paths.get("diverse.hec"));
             byte[] decompressed_bytes = decompress(input_bytes);
-            FileOutputStream outDecomp = new FileOutputStream("d-diverse.txt");
+            FileOutputStream outDecomp = new FileOutputStream("løsning.lyx");
             outDecomp.write(decompressed_bytes);
             outDecomp.close();
 

@@ -151,17 +151,17 @@ public class LZ {
 
   public static void main(String[] args) {
         try {
-            byte[] input_bytes = Files.readAllBytes(Paths.get("diverse.txt"));
-            byte[] compressed_bytes = compress(input_bytes);
-            FileOutputStream out = new FileOutputStream("diverse.hec");
-            out.write(compressed_bytes);
-            out.close();
-
-            input_bytes = Files.readAllBytes(Paths.get("diverse.hec"));
-            byte[] decompressed_bytes = decompress(input_bytes);
-            FileOutputStream outDecomp = new FileOutputStream("d-diverse.txt");
-            outDecomp.write(decompressed_bytes);
-            outDecomp.close();
+          byte[] input_bytes = Files.readAllBytes(Paths.get("diverse.lyx"));
+          byte[] compressed_bytes = compress(input_bytes);
+          FileOutputStream out = new FileOutputStream("diverse.hec");
+          out.write(compressed_bytes);
+          out.close();
+  
+          input_bytes = Files.readAllBytes(Paths.get("diverse.hec"));
+          byte[] decompressed_bytes = decompress(input_bytes);
+          FileOutputStream outDecomp = new FileOutputStream("løsning.lyx");
+          outDecomp.write(decompressed_bytes);
+          outDecomp.close();
 
         } catch (Exception e){
             System.out.println("Error: " + e.getMessage());

@@ -1,122 +1,136 @@
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
-
-import java.io.FileOutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
-
 
 public class LZW {
-    public static byte[] compress(byte[] input) {
-        int dictSize = 256;
-        Map<ArrayList<Byte>, Integer> dictionary = new HashMap<>();
-        
-        // Initialize dictionary with single bytes
-        for (int i = 0; i < dictSize; i++) {
-            ArrayList<Byte> byteList = new ArrayList<>();
-            byteList.add((byte) i);
-            dictionary.put(byteList, i);
-        }
+  // Change this variable to stay within the dictionary limit
+  private  static int BYTE_SIZE = 2;
 
-        ArrayList<Byte> current = new ArrayList<>();
-        List<Integer> result = new ArrayList<>();
-
-        for (byte b : input) {
-            ArrayList<Byte> newSeq = new ArrayList<>(current);
-            newSeq.add(b);
-
-            if (dictionary.containsKey(newSeq)) {
-                current = newSeq;
-            } else {
-                result.add(dictionary.get(current));
-                dictionary.put(newSeq, dictSize++);
-                current = new ArrayList<>();
-                current.add(b);
-            }
-        }
-
-        if (!current.isEmpty()) {
-            result.add(dictionary.get(current));
-        }
-
-        // Convert the integer list to byte array
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        for (Integer code : result) {
-            byte[] bytes = ByteBuffer.allocate(4).putInt(code).array();
-            outputStream.write(bytes, 0, 4);
-        }
-
-        return outputStream.toByteArray();
+  /**
+   * This method creates an initial dictionary containing all single-byte ASCII characters (0-255).
+   * As it processes each character in the input string,
+   * it searches for the longest sequence of characters (substring) that matches an entry in the dictionary.
+   * When a substring that is not in the dictionary is found,
+   * the method stores the dictionary code of the last matched substring,
+   * and adds the new substring to the dictionary with a unique code.
+   */
+  public static byte[] compress(byte[] data, int byteSize) {
+    BYTE_SIZE = byteSize;
+    int dictSize = 256;
+    Map<String, Integer> dictionary = new HashMap<>();
+    for (int i = 0; i < dictSize; i++) {
+      dictionary.put(String.valueOf((char) i), i);
     }
 
-    public static byte[] decompress(byte[] input) {
-        // Convert byte array back to integer list
-        List<Integer> encodedText = new ArrayList<>();
-        ByteBuffer buffer = ByteBuffer.wrap(input);
-        while (buffer.remaining() >= 4) {
-            encodedText.add(buffer.getInt());
-        }
+    String foundChars = "";
+    List<Integer> compressedData = new ArrayList<>();
 
-        int dictSize = 256;
-        Map<Integer, ArrayList<Byte>> dictionary = new HashMap<>();
-        
-        // Initialize dictionary with single bytes
-        for (int i = 0; i < dictSize; i++) {
-            ArrayList<Byte> byteList = new ArrayList<>();
-            byteList.add((byte) i);
-            dictionary.put(i, byteList);
-        }
-
-        ArrayList<Byte> current = new ArrayList<>(dictionary.get(encodedText.get(0)));
-        ByteArrayOutputStream result = new ByteArrayOutputStream();
-        for (byte b : current) {
-            result.write(b);
-        }
-
-        for (int i = 1; i < encodedText.size(); i++) {
-            int code = encodedText.get(i);
-            ArrayList<Byte> entry;
-            
-            if (dictionary.containsKey(code)) {
-                entry = new ArrayList<>(dictionary.get(code));
-            } else {
-                entry = new ArrayList<>(current);
-                entry.add(current.get(0));
-            }
-
-            for (byte b : entry) {
-                result.write(b);
-            }
-
-            ArrayList<Byte> newSeq = new ArrayList<>(current);
-            newSeq.add(entry.get(0));
-            dictionary.put(dictSize++, newSeq);
-            
-            current = entry;
-        }
-
-        return result.toByteArray();
+    for (byte b : data) {
+      // concatenates the current sequence of found characters
+      String charsToAdd = foundChars + (char) (b & 0xFF);
+      if (dictionary.containsKey(charsToAdd)) {
+        // If the dictionary has the code value of the character(s), add it to the sequence and continue.
+        foundChars = charsToAdd;
+      } else {
+        // If the chars are not in the dictionary, add the current sequence of code value(s) to the result.
+        compressedData.add(dictionary.get(foundChars));
+        // Then add the new entry to the dictionary, and reset to the current character being looped over.
+        dictionary.put(charsToAdd, dictSize++);
+        foundChars = String.valueOf((char) (b & 0xFF));
+      }
     }
 
-    public static void main(String[] args) {
+    // One last check after exiting the loop:
+    if (!foundChars.isEmpty()) {
+      // If the current foundChars isn't empty, it didn't get the chance to add it to the result, so add it here.
+      compressedData.add(dictionary.get(foundChars));
+    }
+
+    // Convert List<Integer> to byte array
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    for (Integer code : compressedData) {
+      for (int j = 0; j < BYTE_SIZE; j++) {
+        outputStream.write((code >> (8 * j)) & 0xFF);
+      }
+    }
+
+    return outputStream.toByteArray();
+  }
+
+  /**
+   * For decompressing, the logic is similar and almost reversed.
+   * <p>
+   * For each code number we have, we are going to check if this code is present in the dictionary.
+   * If it is, we hold on to it, check the one following it, and append their corresponding characters
+   * along with the new code to the dictionary.
+   * <p>
+   * This allows decoding without the need to provide a pre-saved dictionary to the decoder.
+   */
+  public static byte[] decompress(byte[] compressedData, int byteSize) {
+    BYTE_SIZE = byteSize;
+    int dictSize = 256;
+    Map<Integer, String> dictionary = new HashMap<>();
+    for (int i = 0; i < dictSize; i++) {
+      dictionary.put(i, String.valueOf((char) i));
+    }
+
+    // Convert compressed byte data to list of integers
+    List<Integer> encodedText = new ArrayList<>();
+    for (int i = 0; i <= compressedData.length - BYTE_SIZE; i += BYTE_SIZE) {
+      int value = 0;
+      for (int j = 0; j < BYTE_SIZE; j++) {
+        value |= (compressedData[i + j] & 0xFF) << (8 * j);
+      }
+      encodedText.add(value);
+    }
+
+    // The first integer of the compressed list will always be a character in the dictionary
+    String characters = String.valueOf((char) encodedText.removeFirst().intValue());
+    StringBuilder result = new StringBuilder(characters);
+
+    for (int code : encodedText) {
+      // If the code is present in the dictionary, add it, otherwise use the last sequence
+      String entry = dictionary.containsKey(code)
+              ? dictionary.get(code)
+              : characters + characters.charAt(0);
+      result.append(entry);
+
+      // Add new sequence to the dictionary
+      dictionary.put(dictSize++, characters + entry.charAt(0));
+      characters = entry;
+    }
+
+    // Convert the result StringBuilder to byte array
+    byte[] decompressedBytes = new byte[result.length()];
+    for (int i = 0; i < result.length(); i++) {
+      decompressedBytes[i] = (byte) result.charAt(i);
+    }
+    return decompressedBytes;
+  }
+
+  public static void main(String[] args) {
         try {
             byte[] input_bytes = Files.readAllBytes(Paths.get("diverse.lyx"));
-            byte[] compressed_bytes = compress(input_bytes);
+            byte[] compressed_bytes = compress(input_bytes, BYTE_SIZE);
             FileOutputStream out = new FileOutputStream("diverse.hec");
             out.write(compressed_bytes);
             out.close();
     
             input_bytes = Files.readAllBytes(Paths.get("diverse.hec"));
-            byte[] decompressed_bytes = decompress(input_bytes);
+            byte[] decompressed_bytes = decompress(input_bytes, BYTE_SIZE);
             FileOutputStream outDecomp = new FileOutputStream("løsning.lyx");
             outDecomp.write(decompressed_bytes);
             outDecomp.close();
-    
+
+            System.out.println();
+            System.out.println("Original file size: " + input_bytes.length);
+            System.out.println("Compressed file size: " + compressed_bytes.length);
+            System.out.println("Decompressed file size: " + decompressed_bytes.length);
         } catch (Exception e){
             System.out.println("Error: " + e.getMessage());
             e.printStackTrace();

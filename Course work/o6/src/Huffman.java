@@ -93,7 +93,7 @@ public class Huffman {
         for (int frequency : frequencies) {
             out.writeInt(frequency);
         }
-
+        // Write byte is int to be able to preform bitwise operations
         int writeByte = 0;
         int bitIteration = 0;
         ArrayList<Byte> bytes = new ArrayList<>();
@@ -101,6 +101,8 @@ public class Huffman {
         for (byte b : input_bytes) {
             String bitString = root.bitStrings[b & 0xFF];
             for (char bit : bitString.toCharArray()) {
+                // Shift left by one and add either 1 or 0 to the rightmost bit
+                // depending on the current bit in the bitstring
                 writeByte = (writeByte << 1) | (bit == '1' ? 1 : 0);
                 bitIteration++;
                 if (bitIteration == 8) {
@@ -110,11 +112,14 @@ public class Huffman {
                 }
             }
         }
-        while (bitIteration < 8 && bitIteration != 0) {
-            writeByte = (writeByte << 1);
-            ++bitIteration;
+
+        out.writeByte(bitIteration);
+
+        if (bitIteration > 0) {
+            writeByte = writeByte << (8 - bitIteration);
+            bytes.add((byte) writeByte);
         }
-        bytes.add((byte) writeByte);
+
         for (Byte s : bytes) {
             out.write(s);
         }
@@ -167,7 +172,7 @@ public class Huffman {
         for (int i = 0; i < length; i++) {
             frequencies[i] = in.readInt();
         }
-        //byte lastByte = in.readByte();
+        byte lastByteBits = in.readByte();
         
         PriorityQueue<Node> priorityQueue = createHuffmanQueue(length, new HuffmanComparator(), frequencies);
         Node root = Node.createHuffmanTree(priorityQueue);
@@ -177,11 +182,17 @@ public class Huffman {
         in.close();
 
         Node currentNode = root;
-        byte currentByte;
         
-        while (in.available() > 0) {
-            currentByte = in.readByte();
-            for (int i = 7; i >= 0; i--) {
+        
+        int remainingBytes = in.available();
+        for(int byteIndex = 0; byteIndex < remainingBytes; byteIndex++){
+            byte currentByte = in.readByte();
+            int bitsToRead = 8;
+            // For the last byte, only read the valid bits
+            if (byteIndex == remainingBytes - 1 && lastByteBits > 0) {
+                bitsToRead = lastByteBits;
+            }
+            for (int i = 7; i >= (8 - bitsToRead); i--) {
                 int bit = (currentByte >> i) & 1;
                 currentNode = (bit == 0) ? currentNode.left : currentNode.right;
 
@@ -210,6 +221,10 @@ public class Huffman {
             outDecomp.write(decompressed_bytes);
             outDecomp.close();
 
+            System.out.println();
+            System.out.println("Original file size: " + input_bytes.length);
+            System.out.println("Compressed file size: " + compressed_bytes.length);
+            System.out.println("Decompressed file size: " + decompressed_bytes.length);
         } catch (Exception e){
             System.out.println("Error: " + e.getMessage());
             e.printStackTrace();

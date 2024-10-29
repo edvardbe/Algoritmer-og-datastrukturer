@@ -6,41 +6,36 @@ public class HodneEekComp{
 
     public static void main(String[] args) {
         try {
-            byte[] input_bytes = Files.readAllBytes(Paths.get("diverse.lyx"));
-                byte[] lzw_compressed = LZW.compress(input_bytes);
-                byte[] huffman_compressed = Huffman.compress(lzw_compressed);
-                byte[] lz_compressed = LZ.compress(huffman_compressed);
-
-                FileOutputStream out = new FileOutputStream("diverse.hec");
-                out.write(lz_compressed);
-                out.close();
-
-                byte[] de_input_bytes = Files.readAllBytes(Paths.get("diverse.hec"));
-                byte[] de_lzw_decompressed = LZ.decompress(de_input_bytes);
-
-                byte[] de_huffman_decompressed = Huffman.decompress(de_lzw_decompressed);
-                byte[] de_lempel_ziv_decompressed = LZ.decompress(de_huffman_decompressed);
-                FileOutputStream de_out = new FileOutputStream("løsning.lyx");
-                de_out.write(de_lempel_ziv_decompressed);
-                de_out.close();
-            
-            /* if (args[0].equals("c")){
-                byte[] input_bytes = Files.readAllBytes(Paths.get(args[1]));
-                byte[] lempel_ziv_compressed = LZW.compress(input_bytes);
+            if(Integer.parseInt(args[1]) > 4 || Integer.parseInt(args[1]) < 1) {
+                throw new IllegalArgumentException("Write a number between 1 and 4");
+            }
+            if (args[0].equals("c")){
+                int byteSize = Integer.parseInt(args[1]);
+                byte[] input_bytes = Files.readAllBytes(Paths.get(args[2]));
+                byte[] lempel_ziv_compressed = LZW.compress(input_bytes, byteSize);
                 byte[] huffman_compressed = Huffman.compress(lempel_ziv_compressed);
-                FileOutputStream out = new FileOutputStream(args[2]);
+                FileOutputStream out = new FileOutputStream(args[3]);
                 out.write(huffman_compressed);
                 out.close();
 
+                System.out.println();
+                System.out.println("Original file size: " + input_bytes.length);
+                System.out.println("Compressed file size: " + huffman_compressed.length);
+                
             }
-            if (args[0].equals("d")){
-                byte[] input_bytes = Files.readAllBytes(Paths.get(args[1]));
+            else if (args[0].equals("d")){
+                int byteSize = Integer.parseInt(args[1]);
+                byte[] input_bytes = Files.readAllBytes(Paths.get(args[2]));
                 byte[] huffman_decompressed = Huffman.decompress(input_bytes);
-                byte[] lempel_ziv_decompressed = LZW.decompress(huffman_decompressed);
-                FileOutputStream out = new FileOutputStream(args[2]);
+                byte[] lempel_ziv_decompressed = LZW.decompress(huffman_decompressed, byteSize);
+                FileOutputStream out = new FileOutputStream(args[3]);
                 out.write(lempel_ziv_decompressed);
                 out.close();
-            } */
+
+                System.out.println();
+                System.out.println("Compressed file size: " + input_bytes.length);
+                System.out.println("Decompressed file size: " + lempel_ziv_decompressed.length);
+            } 
         } catch (Exception e) {
             e.printStackTrace();
 

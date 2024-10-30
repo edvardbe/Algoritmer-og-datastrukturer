@@ -1,7 +1,4 @@
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -112,28 +109,4 @@ public class LZW {
     }
     return decompressedBytes;
   }
-
-  public static void main(String[] args) {
-        try {
-            byte[] input_bytes = Files.readAllBytes(Paths.get("diverse.lyx"));
-            byte[] compressed_bytes = compress(input_bytes, BYTE_SIZE);
-            FileOutputStream out = new FileOutputStream("diverse.hec");
-            out.write(compressed_bytes);
-            out.close();
-    
-            input_bytes = Files.readAllBytes(Paths.get("diverse.hec"));
-            byte[] decompressed_bytes = decompress(input_bytes, BYTE_SIZE);
-            FileOutputStream outDecomp = new FileOutputStream("løsning.lyx");
-            outDecomp.write(decompressed_bytes);
-            outDecomp.close();
-
-            System.out.println();
-            System.out.println("Original file size: " + input_bytes.length);
-            System.out.println("Compressed file size: " + compressed_bytes.length);
-            System.out.println("Decompressed file size: " + decompressed_bytes.length);
-        } catch (Exception e){
-            System.out.println("Error: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
 }

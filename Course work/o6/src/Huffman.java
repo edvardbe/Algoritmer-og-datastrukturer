@@ -1,7 +1,4 @@
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -205,35 +202,5 @@ public class Huffman {
 
         return outStream.toByteArray();
 
-    }
-
-    public static void main(String[] args) {
-        try {
-            String input_path = "twenty.txt";
-            byte[] input_bytes = Files.readAllBytes(Paths.get(input_path));
-            byte[] compressed_bytes = compress(input_bytes);
-            FileOutputStream out = new FileOutputStream("diverse.hec");
-            out.write(compressed_bytes);
-            out.close();
-            
-            String output_path = "løsning.txt";
-            input_bytes = Files.readAllBytes(Paths.get("diverse.hec"));
-            byte[] decompressed_bytes = decompress(input_bytes);
-            FileOutputStream outDecomp = new FileOutputStream(output_path);
-            outDecomp.write(decompressed_bytes);
-            outDecomp.close();
-
-            System.out.println();
-            System.out.println("Original file size: " + input_bytes.length);
-            System.out.println("Compressed file size: " + compressed_bytes.length);
-            System.out.println("Decompressed file size: " + decompressed_bytes.length);
-
-            ProcessBuilder pb = new ProcessBuilder("diff", input_path, output_path);
-            pb.inheritIO().start().waitFor();
-
-        } catch (Exception e){
-            System.out.println("Error: " + e.getMessage());
-            e.printStackTrace();
-        }
     }
 }

@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class LZW {
   // Change this variable to stay within the dictionary limit
-  private  static int BYTE_SIZE = 2;
+  private final static int BYTE_SIZE = 2;
 
   /**
    * This method creates an initial dictionary containing all single-byte ASCII characters (0-255).
@@ -16,8 +16,7 @@ public class LZW {
    * the method stores the dictionary code of the last matched substring,
    * and adds the new substring to the dictionary with a unique code.
    */
-  public static byte[] compress(byte[] data, int byteSize) {
-    BYTE_SIZE = byteSize;
+  public static byte[] compress(byte[] data) {
     int dictSize = 256;
     Map<String, Integer> dictionary = new HashMap<>();
     for (int i = 0; i < dictSize; i++) {
@@ -68,8 +67,7 @@ public class LZW {
    * <p>
    * This allows decoding without the need to provide a pre-saved dictionary to the decoder.
    */
-  public static byte[] decompress(byte[] compressedData, int byteSize) {
-    BYTE_SIZE = byteSize;
+  public static byte[] decompress(byte[] compressedData) {
     int dictSize = 256;
     Map<Integer, String> dictionary = new HashMap<>();
     for (int i = 0; i < dictSize; i++) {

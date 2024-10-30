@@ -114,7 +114,7 @@ public class Huffman {
         }
 
         out.writeByte(bitIteration);
-
+        // If there are bits left in the last byte, shift left by the remaining bits
         if (bitIteration > 0) {
             writeByte = writeByte << (8 - bitIteration);
             bytes.add((byte) writeByte);
@@ -156,7 +156,7 @@ public class Huffman {
     }
 
     /**
-     * Decompresses a file that is compressed to Huffman-code.
+     * Decompresses a file that is compressed to Huffman-code. 
      * 
      * @param input_path path for input file, in other words path to the file we want to decompress 
      * @param output_path path for output file, creates a new file if path does not match any exisiting file.  
@@ -168,7 +168,7 @@ public class Huffman {
         int[] frequencies= new int[length];
         ByteArrayInputStream inputStream = new ByteArrayInputStream(input_bytes);
         DataInputStream in = new DataInputStream(inputStream);
-        
+        // Read the frequencies of each character
         for (int i = 0; i < length; i++) {
             frequencies[i] = in.readInt();
         }
@@ -209,15 +209,17 @@ public class Huffman {
 
     public static void main(String[] args) {
         try {
-            byte[] input_bytes = Files.readAllBytes(Paths.get("diverse.lyx"));
+            String input_path = "twenty.txt";
+            byte[] input_bytes = Files.readAllBytes(Paths.get(input_path));
             byte[] compressed_bytes = compress(input_bytes);
             FileOutputStream out = new FileOutputStream("diverse.hec");
             out.write(compressed_bytes);
             out.close();
-    
+            
+            String output_path = "løsning.txt";
             input_bytes = Files.readAllBytes(Paths.get("diverse.hec"));
             byte[] decompressed_bytes = decompress(input_bytes);
-            FileOutputStream outDecomp = new FileOutputStream("løsning.lyx");
+            FileOutputStream outDecomp = new FileOutputStream(output_path);
             outDecomp.write(decompressed_bytes);
             outDecomp.close();
 
@@ -225,6 +227,10 @@ public class Huffman {
             System.out.println("Original file size: " + input_bytes.length);
             System.out.println("Compressed file size: " + compressed_bytes.length);
             System.out.println("Decompressed file size: " + decompressed_bytes.length);
+
+            ProcessBuilder pb = new ProcessBuilder("diff", input_path, output_path);
+            pb.inheritIO().start().waitFor();
+
         } catch (Exception e){
             System.out.println("Error: " + e.getMessage());
             e.printStackTrace();

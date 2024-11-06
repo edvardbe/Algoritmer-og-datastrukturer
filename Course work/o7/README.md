@@ -19,7 +19,32 @@ curl https://www.idi.ntnu.no/emner/idatt2101/Astjerne/opg/norden/interessepkt.tx
 ```
 [comment]: #TODO (Replace succeeding text with information relevant for our exercise)
 
+In addition we were also given an application to graphically display the map, Navi.java. To implement run this application, we need to include the correct dependencies by setting the classpath to JMapViewer.jar:
 
+
+```
+javac Navi.java -cp JMapViewer.jar
+
+```
+
+Then to run the application with:
+
+UNIX:
+
+```
+java -cp .:JMapViewer.jar Navi
+```
+
+Windows:
+
+```
+java -cp .;JMapViewer.jar Navi
+```
+
+or (depending on the terminal)
+```
+java -cp .`;JMapViewer.jar Navi 
+```
 <!--- 
 
 The tool is invoked by specifying a command file with the -f flag, which

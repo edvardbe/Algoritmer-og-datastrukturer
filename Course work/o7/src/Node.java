@@ -5,11 +5,18 @@ import java.util.LinkedList;
 
 public class Node {
     
+    private Object data;
+
     private String name;
     
     private List<Node> shortestPath = new LinkedList<>();
     
     private Integer distance = Integer.MAX_VALUE;
+
+    private Edge edge;
+
+    private boolean visited = false;
+
     
     Map<Node, Integer> adjacentNodes = new HashMap<>();
 

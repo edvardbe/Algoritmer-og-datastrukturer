@@ -1,3 +1,4 @@
 target/
 *.class
 Test.java
+.DS_Store

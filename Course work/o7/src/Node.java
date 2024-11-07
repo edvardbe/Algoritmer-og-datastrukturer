@@ -5,52 +5,67 @@ import java.util.LinkedList;
 
 public class Node {
     
-    private Object data;
+    private Vector vector;
 
-    private String name;
+    private int name;
     
     private List<Node> shortestPath = new LinkedList<>();
     
-    private Integer distance = Integer.MAX_VALUE;
-
     private Edge edge;
 
+    private int distance = Integer.MAX_VALUE;
+
     private boolean visited = false;
-
-    
-    Map<Node, Integer> adjacentNodes = new HashMap<>();
-
-    public void addDestination(Node destination, int distance) {
-        adjacentNodes.put(destination, distance);
-    }
  
-    public Node(String name) {
+    public Node(int name) {
         this.name = name;
+    }
+
+    public Node(int name, double latitude, double longitude) {
+        this.name = name;
+        this.vector = new Vector(latitude, longitude);
     }
     // getters and setters
 
-    public Map<Node, Integer> getAdjacentNodes(){
-        return this.adjacentNodes;
+    public Vector getVector(){
+        return this.vector;
     }
-    public void setAdjacentNodes(Map<Node, Integer> adjacentNodes){
-        this.adjacentNodes = adjacentNodes;
+
+    public void setVector(Vector vector){
+        this.vector = vector;
     }
-    public String getName(){
+
+    public int getDistance(){
+        return this.distance;
+    }
+
+    public void setDistance(int distance){
+        this.distance = distance;
+    }
+
+    public int getName(){
         return this.name;
     }
     public List<Node> getShortestPath(){
         return this.shortestPath;
     }
-    public Integer getDistance(){
-        return this.distance;
-    }
-    public void setName(String name){
+    public void setName(int name){
         this.name = name;
     }
     public void setShortestPath(List<Node> shortestPath){
         this.shortestPath = shortestPath;
     }
-    public void setDistance(Integer distance){
-        this.distance = distance;
+    public void setEdge(Edge edge){
+        this.edge = edge;
     }
+    public Edge getEdge(){
+        return this.edge;
+    }
+    public void setVisited(boolean visited){
+        this.visited = visited;
+    }
+    public boolean getVisited(){
+        return this.visited;
+    }
+    
 }

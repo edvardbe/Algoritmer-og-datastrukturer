@@ -1,46 +1,42 @@
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
-import java.util.Map.Entry;
 
 /**
- * Dijkstra algorithm implementation from <a href="https://www.baeldung.com/java-dijkstra">Baeldung</a>
+ * Dijkstra algorithm implementation with corrections.
  */
 
 public class Dijkstra {
     public static Graph calculateShortestPathFromSource(Graph graph, Node source) {
+        // Initialize distances
         source.setDistance(0);
-
+        
         Set<Node> settledNodes = new HashSet<>();
         Set<Node> unsettledNodes = new HashSet<>();
 
         unsettledNodes.add(source);
 
-        while (unsettledNodes.size() != 0) {
+        while (!unsettledNodes.isEmpty()) {
             Node currentNode = getLowestDistanceNode(unsettledNodes);
             unsettledNodes.remove(currentNode);
-            for (Entry < Node, Integer> adjacencyPair: 
-            currentNode.getAdjacentNodes().entrySet()) {
-                Node adjacentNode = adjacencyPair.getKey();
-                Integer edgeWeight = adjacencyPair.getValue();
+            for (Edge e = currentNode.getEdge(); e != null; e = e.getNext()) {
+                Node adjacentNode = e.getTo();
+                int edgeWeight = e.getDistance();
                 if (!settledNodes.contains(adjacentNode)) {
                     calculateMinimumDistance(adjacentNode, edgeWeight, currentNode);
                     unsettledNodes.add(adjacentNode);
                 }
             }
             settledNodes.add(currentNode);
-        }
-        for (Node node : settledNodes) {
-            System.out.println("Node: " + node.getName() + " Distance: " + node.getDistance());
-            
-        };
+        }      
         return graph;
     }
 
-    private static Node getLowestDistanceNode(Set < Node > unsettledNodes) {
+    private static Node getLowestDistanceNode(Set<Node> unsettledNodes) {
         Node lowestDistanceNode = null;
         int lowestDistance = Integer.MAX_VALUE;
-        for (Node node: unsettledNodes) {
+        for (Node node : unsettledNodes) {
             int nodeDistance = node.getDistance();
             if (nodeDistance < lowestDistance) {
                 lowestDistance = nodeDistance;
@@ -49,54 +45,40 @@ public class Dijkstra {
         }
         return lowestDistanceNode;
     }
-    private static void calculateMinimumDistance(Node evaluationNode,
-    Integer edgeWeigh, Node sourceNode) {
-        Integer sourceDistance = sourceNode.getDistance();
-        if (sourceDistance + edgeWeigh < evaluationNode.getDistance()) {
-            evaluationNode.setDistance(sourceDistance + edgeWeigh);
+
+    private static void calculateMinimumDistance(Node evaluationNode, int edgeWeight, Node sourceNode) {
+        int sourceDistance = sourceNode.getDistance();
+        if (sourceDistance + edgeWeight < evaluationNode.getDistance()) {
+            evaluationNode.setDistance(sourceDistance + edgeWeight);
             LinkedList<Node> shortestPath = new LinkedList<>(sourceNode.getShortestPath());
             shortestPath.add(sourceNode);
             evaluationNode.setShortestPath(shortestPath);
         }
     }
+
     public static void main(String[] args) {
-        Node nodeA = new Node("A");
-        Node nodeB = new Node("B");
-        Node nodeC = new Node("C");
-        Node nodeD = new Node("D"); 
-        Node nodeE = new Node("E");
-        Node nodeF = new Node("F");
-
-        nodeA.addDestination(nodeB, 10);
-        nodeA.addDestination(nodeC, 15);
-
-        nodeB.addDestination(nodeD, 12);
-        nodeB.addDestination(nodeF, 15);
-
-        nodeC.addDestination(nodeE, 10);
-
-        nodeD.addDestination(nodeE, 2);
-        nodeD.addDestination(nodeF, 1);
-
-        nodeF.addDestination(nodeE, 5);
-
         Graph graph = new Graph();
 
-        graph.addNode(nodeA);
-        graph.addNode(nodeB);
-        graph.addNode(nodeC);
-        graph.addNode(nodeD);
-        graph.addNode(nodeE);
-        graph.addNode(nodeF);
+        List<double[]> nodeList = graph.read_from_file("test-nodes.txt");
+        List<double[]> edgeList = graph.read_from_file("test-edges.txt");
 
-        graph.printGraph();
+        graph.init_graph(nodeList, edgeList);
+        System.out.println("Graph initialized");
+        System.out.println("Total nodes: " + graph.getNodes().size());
+        
+        Node sourceNode = graph.getNodes().get(1); // Assuming 0-based index
+        System.out.println("Source Node: " + sourceNode.getName());
 
         System.out.println("\n ------------- \n");
 
-        graph = Dijkstra.calculateShortestPathFromSource(graph, nodeA);
+        graph = Dijkstra.calculateShortestPathFromSource(graph, sourceNode);
 
-        for (Node node : nodeF.getShortestPath()) {
-            System.out.println(node.getName());
+        graph.print_graph();
+        System.out.println();
+        Node destinationNode = graph.getNodes().get(3); // Assuming 0-based index
+        
+        for (Node node : destinationNode.getShortestPath()) {
+            System.out.print(" ->  " + node.getName() + "(distance)" + node.getEdge().getDistance());
         }
     }
 }

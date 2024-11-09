@@ -1,18 +1,41 @@
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Graph {
+    private Node sourceNode;
+    private Node destinationNode;
     private int numberOfNodes;
     private int numberOfEdges;
     private HashMap<Integer, Node> nodes;
     public Graph(){};
+
+    class Pre {
+        int depth;
+        Node pre;
+        static int inf = 1_000_000_000;
+        public Pre(){
+            depth = inf;
+        }
+
+        public int get_depth() { 
+            return depth;
+        }
+        public Node get_pre() {
+            return pre;
+        }
+        public void init_pre(Node s){
+            for (int i = numberOfNodes; i-- > 0;){
+                nodes.get(i).setData(new Pre());
+            }
+            ((Pre) s.getData()).depth = 0;
+        }
+
+    }
 
     /**
      * Initiates a graph using the {@link #read_from_file(String path)}
@@ -48,13 +71,13 @@ public class Graph {
     }
 
     public void print_graph(){
-        for (int i = 1; i < numberOfNodes; i++){
-            System.out.print(i + ": ");
-            for (Edge e = nodes.get(i).getEdge(); e != null; e = e.getNext()){
+        nodes.forEach((k, v) -> {
+            System.out.print(k + ": ");
+            for (Edge e = v.getEdge(); e != null; e = e.getNext()){
                 System.out.print("-> " + e.getTo().getName() + " ");
             }
             System.out.println();
-        }
+        });
     }
 
     
@@ -73,9 +96,24 @@ public class Graph {
         this.nodes = nodes;
     }
 
+    public Node getSourceNode(){
+        return this.sourceNode;
+    }
+
+    public void setSourceNode(Node sourceNode){
+        this.sourceNode = sourceNode;
+    }
+
+    public Node getDestinationNode(){
+        return this.destinationNode;
+    }
+
+    public void setDestinationNode(Node destinationNode){
+        this.destinationNode = destinationNode;
+    }
+
     private double[] parseLine(String line){
-        String[] lineArray = line.split(" ");
-        List<String> filteredTokens = filterEmptyTokens(lineArray);
+        List<String> filteredTokens = filterEmptyTokens(line);
         
         double[] parsedLine = new double[filteredTokens.size()];
 
@@ -89,7 +127,8 @@ public class Graph {
         }
         return parsedLine;
     }
-    private List<String> filterEmptyTokens(String[] tokens) {
+    private List<String> filterEmptyTokens(String line) {
+        String[] tokens = line.split("\\s+");
         List<String> nonEmptyTokens = new ArrayList<>();
         for (String token : tokens) {
             if (!token.isEmpty()) {
@@ -116,5 +155,30 @@ public class Graph {
             System.out.println("An error occured: " + e.getMessage());
         }
         return list;
+    }
+
+    public List<InterestPoint> readInterestPoints(String path) {
+        List<InterestPoint> interestPoints = new ArrayList<>();
+
+        try (BufferedReader b = new BufferedReader(new FileReader(path))) {
+            String line;
+            while ((line = b.readLine()) != null) {
+                List<String> filteredTokens = filterEmptyTokens(line);
+
+                if (filteredTokens.size() >= 3) {
+                    int nodeNumber = Integer.parseInt(filteredTokens.get(0));
+                    int code = Integer.parseInt(filteredTokens.get(1));
+                    String name = filteredTokens.get(2).replace("\"", ""); // Fjern anførselstegn
+
+                    InterestPoint interestPoint = (InterestPoint) this.nodes.get(nodeNumber);
+                    interestPoint.setType((byte) code);
+                    interestPoint.setDescription(name);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return interestPoints;
     }
 }

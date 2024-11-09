@@ -1,11 +1,11 @@
-import java.util.Map;
-import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedList;
 
 public class Node {
-    
+
     private Vector vector;
+
+    private Object data;
 
     private int name;
     
@@ -49,6 +49,15 @@ public class Node {
     public List<Node> getShortestPath(){
         return this.shortestPath;
     }
+
+    public Object getData(){
+        return this.data;
+    }
+
+    public void setData(Object data){
+        this.data = data;
+    }
+
     public void setName(int name){
         this.name = name;
     }

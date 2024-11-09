@@ -22,6 +22,7 @@
  import java.io.*;
  import java.util.Date;
  import java.util.Locale;
+import java.util.List;
  
  //GUI
  import javax.swing.*; //Vinduer
@@ -77,8 +78,7 @@
      private final JLabel mperpLabelName;
      private final JLabel mperpLabelValue;
  
-     Graf G;
- 
+     Graph graph;
      Layer rutelag, areallag;
  
  /*
@@ -92,9 +92,9 @@
      map().removeAllMapMarkers(); //Fjerne alle punkter på en gang.
  */
  
-     public vindu(Graf parameterG) {
+     public vindu(Graph parameterG) {
          super(new GridBagLayout());
-         G = parameterG;
+         graph = parameterG;
          GridBagConstraints c = new GridBagConstraints();
          GridBagConstraints hc =  new GridBagConstraints(); //høyrejustert
          GridBagConstraints vc =  new GridBagConstraints(); //venstrejustert
@@ -282,17 +282,17 @@
      F.eks. ved å starte med målnoden, og følge forgjengere hele veien
          tilbake til startnoden. Nodene har bredde- og lengdegrader, som 
          fungerer med MapMarkerDot:
- 
- 
-         int n = G.målnode;
-         do {
-             Node x = G.node[n];
-             MapMarkerDot prikk;
-             prikk = new MapMarkerDot(rutelag, grad(x.breddegrad), grad(x.lengdegrad));
-             map().addMapMarker(prikk);
-             n = x.forgjenger;
-         } while (n != G.startnode);
  */
+ 
+         int n = graph.getDestinationNode().getName();
+         do {
+             Node x = graph.getNodes().get(n);
+             MapMarkerDot prikk;
+             prikk = new MapMarkerDot(rutelag, grad(x.getVector().getLatitude()), grad(x.getVector().getLongitude()));
+             map().addMapMarker(prikk);
+             n = ((Node) x.getData()).getName();
+         } while (n != graph.getSourceNode().getName());
+ 
      }
  
      //Tegn det gjennomsøkte arealet, altså alle noder med forgjengere.
@@ -305,10 +305,13 @@
          int noder = 0;
          Date tid1 = new Date();
          String tur = "Kjøretur " + txt_fra.getText() + " — " + txt_til.getText();
-         String alg = ""; 
+         String alg = "";
          switch (e.getActionCommand()) {
              case "dijkstra":
                  /* sett inn et kall for å kjøre Dijkstras algoritme her */
+                 graph.setSourceNode(graph.getNodes().get(Integer.parseInt(txt_fra.getText())));
+                 graph.setDestinationNode(graph.getNodes().get(Integer.parseInt(txt_til.getText())));
+                 Dijkstra.calculateShortestPathFromSource(graph.getSourceNode());
                  alg = "Dijkstras algoritme ";
                  break;
              case "alt":
@@ -324,11 +327,11 @@
  
  /*
      Vise frem kjøretid for bilen, hvis målet ble funnet:
- 
-         if (mål.forgjenger == -1) {
+ */
+         if (graph.getDestinationNode().getEdge() == null || graph.getDestinationNode().getDistance() == Integer.MAX_VALUE || graph.getDestinationNode().getShortestPath().size() == 0) {
              tur += "  Fant ikke veien!";
          } else {
-             int tid = mål.dist;
+             int tid = graph.getDestinationNode().getDistance();
              int tt = tid / 360000; tid -= 360000 * tt;
              int mm = tid / 6000; tid -= 6000 * mm;
              int ss = tid / 100;
@@ -343,7 +346,7 @@
          System.out.println(tur);
          System.out.println(alg);
          System.out.println();
- */
+ 
      }
  
      //Skriving i tekstfelt
@@ -425,7 +428,7 @@
  //Java Navi
  public class Navi {
  
-     public static void gui(Graf G) {
+     public static void gui(Graph G) {
          JFrame frame = new JFrame("Kartnavigasjon");
  
          //Innhold
@@ -439,11 +442,16 @@
      public static void main(String[] args) {
          //Les inn kart, og
          //opprett grafen
-     Graf G = new Graf();
+     Graph graph = new Graph();
+     
+        //Les inn noder og kanter fra fil
+        List<double[]> nodeList = graph.read_from_file("noder.txt");
+        List<double[]> edgeList = graph.read_from_file("kanter.txt");
+        graph.init_graph(nodeList, edgeList);
  
          //...
  
- 
-         gui(G); //Få opp GUI med tiles fra openstreetmap
+ 	
+         gui(graph); //Få opp GUI med tiles fra openstreetmap
    }
  }

@@ -313,6 +313,10 @@ import java.util.List;
                  break;
              case "alt":
                  /* sett inn kall for å kjøre ALT her */
+                    graph.setSourceNode(graph.getNodes().get(Integer.parseInt(txt_fra.getText())));
+                    graph.setDestinationNode(graph.getNodes().get(Integer.parseInt(txt_til.getText())));
+                    ALT.calculateShortestPathFromSource(graph.getSourceNode(), graph.getDestinationNode(), graph.getNumberOfNodes(), graph.getNodes());
+                    noder = graph.getDestinationNode().getShortestPath().size();
                  alg = "ALT-algoritmen ";
                  break;
              default:

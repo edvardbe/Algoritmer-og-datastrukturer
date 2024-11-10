@@ -18,7 +18,9 @@ public class Node {
     private int distance = Integer.MAX_VALUE;
 
     private boolean visited = false;
- 
+    
+    private double heuristicDistance;
+     
     public Node(int name) {
         this.name = name;
     }
@@ -85,6 +87,14 @@ public class Node {
 
     public void setTime(int time){
         this.time = time;
+    }
+
+    public void setHeuristic(double euclideanDistance) {
+        this.heuristicDistance = euclideanDistance;
+    }
+
+    public double getHeuristic() {
+        return this.heuristicDistance;
     }
     
 }

@@ -282,17 +282,13 @@ import java.util.List;
      F.eks. ved å starte med målnoden, og følge forgjengere hele veien
          tilbake til startnoden. Nodene har bredde- og lengdegrader, som 
          fungerer med MapMarkerDot:
- */
- 
-         int n = graph.getDestinationNode().getName();
-         do {
-             Node x = graph.getNodes().get(n);
-             MapMarkerDot prikk;
-             prikk = new MapMarkerDot(rutelag, grad(x.getVector().getLatitude()), grad(x.getVector().getLongitude()));
-             map().addMapMarker(prikk);
-             n = ((Node) x.getData()).getName();
-         } while (n != graph.getSourceNode().getName());
- 
+ */     List<Node> vei = graph.getDestinationNode().getShortestPath();
+        for (Node n : vei) {
+            MapMarkerDot prikk;
+            prikk = new MapMarkerDot(rutelag, grad(n.getVector().getLatitude()), grad(n.getVector().getLongitude()));
+            map().addMapMarker(prikk);
+        }
+        System.out.println("Destination node (x, y): (" + graph.getDestinationNode().getVector().getLatitude() + ", " + graph.getDestinationNode().getVector().getLongitude() + ")");
      }
  
      //Tegn det gjennomsøkte arealet, altså alle noder med forgjengere.
@@ -311,7 +307,8 @@ import java.util.List;
                  /* sett inn et kall for å kjøre Dijkstras algoritme her */
                  graph.setSourceNode(graph.getNodes().get(Integer.parseInt(txt_fra.getText())));
                  graph.setDestinationNode(graph.getNodes().get(Integer.parseInt(txt_til.getText())));
-                 Dijkstra.calculateShortestPathFromSource(graph.getSourceNode());
+                 Dijkstra.calculateShortestPathFromSource(graph.getSourceNode(), graph.getDestinationNode(), graph.getNumberOfNodes(), graph.getNodes());
+                 noder = graph.getDestinationNode().getShortestPath().size();
                  alg = "Dijkstras algoritme ";
                  break;
              case "alt":
@@ -331,7 +328,7 @@ import java.util.List;
          if (graph.getDestinationNode().getEdge() == null || graph.getDestinationNode().getDistance() == Integer.MAX_VALUE || graph.getDestinationNode().getShortestPath().size() == 0) {
              tur += "  Fant ikke veien!";
          } else {
-             int tid = graph.getDestinationNode().getDistance();
+             int tid = graph.getDestinationNode().getTime();
              int tt = tid / 360000; tid -= 360000 * tt;
              int mm = tid / 6000; tid -= 6000 * mm;
              int ss = tid / 100;
@@ -445,8 +442,8 @@ import java.util.List;
      Graph graph = new Graph();
      
         //Les inn noder og kanter fra fil
-        List<double[]> nodeList = graph.read_from_file("noder.txt");
-        List<double[]> edgeList = graph.read_from_file("kanter.txt");
+        List<double[]> nodeList = graph.read_from_file("island/noder.txt");
+        List<double[]> edgeList = graph.read_from_file("island/kanter.txt");
         graph.init_graph(nodeList, edgeList);
  
          //...

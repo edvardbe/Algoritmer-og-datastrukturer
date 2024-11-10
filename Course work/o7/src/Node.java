@@ -8,6 +8,8 @@ public class Node {
     private Object data;
 
     private int name;
+
+    private int time;
     
     private List<Node> shortestPath = new LinkedList<>();
     
@@ -75,6 +77,14 @@ public class Node {
     }
     public boolean getVisited(){
         return this.visited;
+    }
+
+    public int getTime(){
+        return this.time;
+    }
+
+    public void setTime(int time){
+        this.time = time;
     }
     
 }

@@ -1,3 +1,4 @@
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,9 +11,14 @@ import java.util.Set;
 
 public class Dijkstra {
 
-    public static void calculateShortestPathFromSource(Node sourceNode) {
+    
+
+    public static void calculateShortestPathFromSource(Node sourceNode, Node destinationNode, int numberOfNodes, HashMap<Integer, Node> nodes) {
+        Pre pre = new Pre();
+        pre.init_pre(sourceNode, numberOfNodes, nodes);
         // Initialize distances
         sourceNode.setDistance(0);
+        sourceNode.setTime(0);
         
         Set<Node> settledNodes = new HashSet<>();
         Set<Node> unsettledNodes = new HashSet<>();
@@ -22,11 +28,18 @@ public class Dijkstra {
         while (!unsettledNodes.isEmpty()) {
             Node currentNode = getLowestDistanceNode(unsettledNodes);
             unsettledNodes.remove(currentNode);
+
+            if (currentNode.equals(destinationNode)) {
+                System.out.println("Shortest path to destination found with distance: " + currentNode.getDistance());
+                return;
+            }
+
             for (Edge e = currentNode.getEdge(); e != null; e = e.getNext()) {
                 Node adjacentNode = e.getTo();
                 int edgeWeight = e.getDistance();
+                int edgeTime = e.getDriveTime();
                 if (!settledNodes.contains(adjacentNode) && adjacentNode != null) {
-                    calculateMinimumDistance(adjacentNode, edgeWeight, currentNode);
+                    calculateMinimumDistance(adjacentNode, edgeWeight, edgeTime, currentNode);
                     unsettledNodes.add(adjacentNode);
                 }
             }
@@ -47,10 +60,12 @@ public class Dijkstra {
         return lowestDistanceNode;
     }
 
-    private static void calculateMinimumDistance(Node evaluationNode, int edgeWeight, Node sourceNode) {
+    private static void calculateMinimumDistance(Node evaluationNode, int edgeWeight, int edgeTime, Node sourceNode) {
         int sourceDistance = sourceNode.getDistance();
+        int sourceTime = sourceNode.getTime();
         if (sourceDistance + edgeWeight < evaluationNode.getDistance()) {
             evaluationNode.setDistance(sourceDistance + edgeWeight);
+            evaluationNode.setTime(sourceTime + edgeTime);
             LinkedList<Node> shortestPath = new LinkedList<>(sourceNode.getShortestPath());
             shortestPath.add(sourceNode);
             evaluationNode.setShortestPath(shortestPath);
@@ -69,17 +84,9 @@ public class Dijkstra {
         graph.init_graph(nodeList, edgeList);
         System.out.println("Graph initialized");
         System.out.println("Total nodes: " + graph.getNodes().size());
-        
-        Node source = graph.getNodes().get(1); // Assuming 0-based index
-        System.out.println("Source Node: " + source.getName());
-
         System.out.println("\n ------------- \n");
-
-        Dijkstra.calculateShortestPathFromSource(source);
-
-        graph.print_graph();
-        Node destinationNode; // Assuming 0-based index
-        
+        Node source;
+        Node destination;
         Scanner scanner = new Scanner(System.in);
         while (true) {
             System.out.println("\n ------------- \n");
@@ -91,10 +98,12 @@ public class Dijkstra {
                     break;
                 }
                 source = graph.getNodes().get(Integer.parseInt(input));
+                graph.setSourceNode(source);
                 System.out.println("Source Node: " + source.getName());
-                Dijkstra.calculateShortestPathFromSource(source);
             } catch (Exception e) {
+                e.printStackTrace();
                 System.out.println("Invalid input");
+                e.getMessage();
                 continue;
             }
 
@@ -106,16 +115,18 @@ public class Dijkstra {
                 if (input.equals("x")) {
                     break;
                 }
-                destinationNode = graph.getNodes().get(Integer.parseInt(input));
-                System.out.println("Destination Node: " + destinationNode.getName());
-                if (destinationNode.getShortestPath().size() == 0) {
+                destination = graph.getNodes().get(Integer.parseInt(input));
+                System.out.println("Destination Node: " + destination.getName());
+                Dijkstra.calculateShortestPathFromSource(source, destination, graph.getNumberOfNodes(), graph.getNodes());
+
+                if (destination.getShortestPath().size() == 0) {
                     System.out.println("No path found");
                 } else {
                     System.out.println("\nShortest path: ");
-                    for (Node node : destinationNode.getShortestPath()) {
+                    for (Node node : destination.getShortestPath()) {
                         System.out.print(" ->  " + node.getName() + " (distance: " + node.getEdge().getDistance() +")");
                     }
-                    System.out.println(" ->  " + destinationNode.getName());
+                    System.out.println(" ->  " + destination.getName());
                 }
             } catch (Exception e) {
                 System.out.println("Invalid input");

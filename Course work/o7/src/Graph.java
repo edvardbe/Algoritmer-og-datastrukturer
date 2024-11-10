@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.PriorityQueue;
 
 public class Graph {
     private Node sourceNode;
@@ -14,28 +15,38 @@ public class Graph {
     private HashMap<Integer, Node> nodes;
     public Graph(){};
 
-    class Pre {
-        int depth;
-        Node pre;
-        static int inf = 1_000_000_000;
-        public Pre(){
-            depth = inf;
-        }
+    
 
-        public int get_depth() { 
-            return depth;
-        }
-        public Node get_pre() {
-            return pre;
-        }
-        public void init_pre(Node s){
-            for (int i = numberOfNodes; i-- > 0;){
-                nodes.get(i).setData(new Pre());
+    public void dijkstra(Node source){
+        Pre pre = new Pre();
+        pre.init_pre(source, numberOfNodes, nodes);
+        PriorityQueue<Node> priorityQueue = new PriorityQueue<>();
+        for(int i = numberOfNodes; i > 1; --i){
+            Node n = extract_min();
+            for (Edge e = n.getEdge(); e != null; e = e.getNext()){
+                shorten(n , e);
             }
-            ((Pre) s.getData()).depth = 0;
         }
-
     }
+
+    public Node extract_min(){
+        Node min = null;
+        for (Node n : nodes.values()){
+            if (min == null || ((Pre) n.getData()).get_depth() < ((Pre) min.getData()).get_depth()){
+                min = n;
+            }
+        }
+        return min;
+    }
+
+    public void shorten(Node n, Edge e){
+        Node m = e.getTo();
+        if (((Pre) m.getData()).get_depth() > ((Pre) n.getData()).get_depth() + e.getDriveTime()){
+            ((Pre) m.getData()).depth = ((Pre) n.getData()).depth + e.getDriveTime();
+            ((Pre) m.getData()).pre = n;
+        }
+    }
+
 
     /**
      * Initiates a graph using the {@link #read_from_file(String path)}
@@ -50,8 +61,8 @@ public class Graph {
         this.nodes = new HashMap<>();
         for (int i = 1; i < numberOfNodes + 1; i++) {
             int key = (int) nodeList.get(i)[0];
-            double latitude = nodeList.get(i)[1];
-            double longitude = nodeList.get(i)[2];
+            double latitude = nodeList.get(i)[1] * Math.PI / 180;
+            double longitude = nodeList.get(i)[2] * Math.PI / 180;
             nodes.put(key, new Node(key, latitude, longitude));
 
         }
@@ -87,6 +98,22 @@ public class Graph {
     }
 
     // getters and setters 
+
+    public int getNumberOfNodes(){
+        return this.numberOfNodes;
+    }
+
+    public void setNumberOfNodes(int numberOfNodes){
+        this.numberOfNodes = numberOfNodes;
+    }
+
+    public int getNumberOfEdges(){
+        return this.numberOfEdges;
+    }
+
+    public void setNumberOfEdges(int numberOfEdges){
+        this.numberOfEdges = numberOfEdges;
+    }
 
     public HashMap<Integer, Node> getNodes(){
         return this.nodes;
@@ -180,5 +207,63 @@ public class Graph {
         }
 
         return interestPoints;
+    }
+
+    public static void main(String[] args) {
+        Graph graph = new Graph();
+
+        List<double[]> nodeList = graph.read_from_file("test-noder.txt");
+        List<double[]> edgeList = graph.read_from_file("test-kanter.txt");
+
+        graph.init_graph(nodeList, edgeList);
+        System.out.println("Graph initialized");
+        System.out.println("Total nodes: " + graph.getNodes().size());
+        System.out.println("\n ------------- \n");
+        Node source;
+        Node destination;
+        java.util.Scanner scanner = new java.util.Scanner(System.in);
+        while (true) {
+            System.out.println("\n ------------- \n");
+            System.out.println("Press x to exit");
+            System.out.println("Select source node: ");
+            try {
+                String input = scanner.nextLine();
+                if (input.equals("x")) {
+                    break;
+                }
+                source = graph.getNodes().get(Integer.parseInt(input));
+                graph.setSourceNode(source);
+                System.out.println("Source Node: " + source.getName());
+                graph.dijkstra(source);
+            } catch (Exception e) {
+                System.out.println("Invalid input");
+                continue;
+            }
+
+            try {
+                System.out.println("\n ------------- \n");
+                System.out.println("Press x to exit");
+                System.out.println("Select destination node: ");
+                String input = scanner.nextLine();
+                if (input.equals("x")) {
+                    break;
+                }
+                destination = graph.getNodes().get(Integer.parseInt(input));
+                System.out.println("Destination Node: " + destination.getName());
+                if (destination.getShortestPath().size() == 0) {
+                    System.out.println("No path found");
+                } else {
+                    System.out.println("Shortest path: ");
+                    for (Node n : destination.getShortestPath()) {
+                        System.out.print(n.getName() + " ");
+                    }
+                    System.out.println();
+                }
+            } catch (Exception e) {
+                System.out.println("Invalid input");
+                continue;
+            }
+        }
+        scanner.close();
     }
 }

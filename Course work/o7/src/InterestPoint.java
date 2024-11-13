@@ -10,6 +10,17 @@ public class InterestPoint extends Node {
         this.description = description;
     }
 
+    public InterestPoint(Node node, byte type, String description) {
+        super(node.getName(), node.getVector().getLatitude(), node.getVector().getLongitude());
+        this.type = type;
+        this.description = description;
+    }
+    public InterestPoint(int nodeNumber, byte type, String description) {
+        super(nodeNumber);
+        this.type = type;
+        this.description = description;
+    }
+
     public byte getType() {
         return type;
     }

@@ -22,6 +22,7 @@
  import java.io.*;
  import java.util.Date;
  import java.util.Locale;
+import java.util.Map;
 import java.util.List;
  
  //GUI
@@ -448,7 +449,8 @@ import java.util.List;
         //Les inn noder og kanter fra fil
         List<double[]> nodeList = graph.read_from_file("island/noder.txt");
         List<double[]> edgeList = graph.read_from_file("island/kanter.txt");
-        graph.init_graph(nodeList, edgeList);
+        Map<Integer, InterestPoint> interestPoints = graph.readInterestPoints("island/interessepkt.txt");
+        graph.init_graph(nodeList, edgeList, interestPoints);
  
          //...
  

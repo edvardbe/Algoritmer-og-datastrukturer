@@ -2,6 +2,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -80,8 +81,9 @@ public class Dijkstra {
 
         List<double[]> nodeList = graph.read_from_file("test-noder.txt");
         List<double[]> edgeList = graph.read_from_file("test-kanter.txt");
+        Map<Integer, InterestPoint> interestPoints = graph.readInterestPoints("test-interessepkt.txt");
 
-        graph.init_graph(nodeList, edgeList);
+        graph.init_graph(nodeList, edgeList, interestPoints);
         System.out.println("Graph initialized");
         System.out.println("Total nodes: " + graph.getNodes().size());
         System.out.println("\n ------------- \n");

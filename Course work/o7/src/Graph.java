@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 
 public class Graph {
@@ -54,8 +55,8 @@ public class Graph {
      * and the array of nodes, nodes.
      * @param path
      */
-    public void init_graph(List<double[]> nodeList, List<double[]> edgeList){
-
+    public void init_graph(List<double[]> nodeList, List<double[]> edgeList, Map<Integer, InterestPoint> interestPoints){
+    
         this.numberOfNodes = (int) nodeList.get(0)[0];
         this.numberOfEdges = (int) edgeList.get(0)[0];
         this.nodes = new HashMap<>();
@@ -63,8 +64,12 @@ public class Graph {
             int key = (int) nodeList.get(i)[0];
             double latitude = nodeList.get(i)[1] * Math.PI / 180;
             double longitude = nodeList.get(i)[2] * Math.PI / 180;
-            nodes.put(key, new Node(key, latitude, longitude));
-
+            if(interestPoints.containsKey(key)) {
+                InterestPoint interestPoint = interestPoints.get(key);
+                nodes.put(key, new InterestPoint(key, latitude, longitude, interestPoint.getType(), interestPoint.getDescription()));
+            } else {
+                nodes.put(key, new Node(key, latitude, longitude));
+            }
         }
 
         for (int i = 1; i < numberOfEdges + 1; i++){
@@ -184,8 +189,8 @@ public class Graph {
         return list;
     }
 
-    public List<InterestPoint> readInterestPoints(String path) {
-        List<InterestPoint> interestPoints = new ArrayList<>();
+    public Map<Integer, InterestPoint> readInterestPoints(String path) {
+        Map<Integer, InterestPoint> interestPoints = new HashMap<>();
 
         try (BufferedReader b = new BufferedReader(new FileReader(path))) {
             String line;
@@ -196,10 +201,9 @@ public class Graph {
                     int nodeNumber = Integer.parseInt(filteredTokens.get(0));
                     int code = Integer.parseInt(filteredTokens.get(1));
                     String name = filteredTokens.get(2).replace("\"", ""); // Fjern anførselstegn
-
-                    InterestPoint interestPoint = (InterestPoint) this.nodes.get(nodeNumber);
-                    interestPoint.setType((byte) code);
-                    interestPoint.setDescription(name);
+                    
+                    InterestPoint interestPoint = new InterestPoint(nodeNumber, (byte) code, name);
+                    interestPoints.put(nodeNumber, interestPoint);
                 }
             }
         } catch (IOException e) {
@@ -214,10 +218,12 @@ public class Graph {
 
         List<double[]> nodeList = graph.read_from_file("test-noder.txt");
         List<double[]> edgeList = graph.read_from_file("test-kanter.txt");
+        Map<Integer, InterestPoint> interestPoints = graph.readInterestPoints("test-interessepkt.txt");
+        graph.init_graph(nodeList, edgeList, interestPoints);
 
-        graph.init_graph(nodeList, edgeList);
         System.out.println("Graph initialized");
         System.out.println("Total nodes: " + graph.getNodes().size());
+        graph.print_graph();
         System.out.println("\n ------------- \n");
         Node source;
         Node destination;
@@ -234,7 +240,6 @@ public class Graph {
                 source = graph.getNodes().get(Integer.parseInt(input));
                 graph.setSourceNode(source);
                 System.out.println("Source Node: " + source.getName());
-                graph.dijkstra(source);
             } catch (Exception e) {
                 System.out.println("Invalid input");
                 continue;
@@ -249,6 +254,8 @@ public class Graph {
                     break;
                 }
                 destination = graph.getNodes().get(Integer.parseInt(input));
+                graph.setDestinationNode(destination);
+                Dijkstra.calculateShortestPathFromSource(source, destination, graph.getNumberOfNodes(), graph.getNodes());
                 System.out.println("Destination Node: " + destination.getName());
                 if (destination.getShortestPath().size() == 0) {
                     System.out.println("No path found");

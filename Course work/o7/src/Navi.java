@@ -81,6 +81,7 @@ import java.util.List;
  
      Graph graph;
      Layer rutelag, areallag;
+     int noder = 0;
  
  /*
      For å plotte punkter:
@@ -283,13 +284,24 @@ import java.util.List;
      F.eks. ved å starte med målnoden, og følge forgjengere hele veien
          tilbake til startnoden. Nodene har bredde- og lengdegrader, som 
          fungerer med MapMarkerDot:
- */     List<Node> vei = graph.getDestinationNode().getShortestPath();
-        for (Node n : vei) {
+ */     
+
+        Node node = graph.getDestinationNode();
+        noder = 0;
+        while (node != null) {
+            MapMarkerDot prikk;
+            prikk = new MapMarkerDot(rutelag, grad(node.getVector().getLatitude()), grad(node.getVector().getLongitude()));
+            map().addMapMarker(prikk);
+            node = (Node) ((Pre) node.getData()).get_pre();
+            noder++;
+        }
+        
+        /* for (Node n : vei) {
             MapMarkerDot prikk;
             prikk = new MapMarkerDot(rutelag, grad(n.getVector().getLatitude()), grad(n.getVector().getLongitude()));
             map().addMapMarker(prikk);
         }
-        System.out.println("Destination node (x, y): (" + graph.getDestinationNode().getVector().getLatitude() + ", " + graph.getDestinationNode().getVector().getLongitude() + ")");
+        System.out.println("Destination node (x, y): (" + graph.getDestinationNode().getVector().getLatitude() + ", " + graph.getDestinationNode().getVector().getLongitude() + ")"); */
      }
  
      //Tegn det gjennomsøkte arealet, altså alle noder med forgjengere.
@@ -299,7 +311,6 @@ import java.util.List;
  
      //Knapper
      public void actionPerformed(ActionEvent e) {
-         int noder = 0;
          Date tid1 = new Date();
          String tur = "Kjøretur " + txt_fra.getText() + " — " + txt_til.getText();
          String alg = "";
@@ -308,16 +319,18 @@ import java.util.List;
                  /* sett inn et kall for å kjøre Dijkstras algoritme her */
                  graph.setSourceNode(graph.getNodes().get(Integer.parseInt(txt_fra.getText())));
                  graph.setDestinationNode(graph.getNodes().get(Integer.parseInt(txt_til.getText())));
-                 Dijkstra.calculateShortestPathFromSource(graph.getSourceNode(), graph.getDestinationNode(), graph.getNumberOfNodes(), graph.getNodes());
-                 noder = graph.getDestinationNode().getShortestPath().size();
+                 graph.dijkstra(graph.getSourceNode(), graph.getDestinationNode());
+                 //Dijkstra.calculateShortestPathFromSource(graph.getSourceNode(), graph.getDestinationNode(), graph.getNumberOfNodes(), graph.getNodes());
+                 //noder = graph.getDestinationNode().getShortestPath().size();
                  alg = "Dijkstras algoritme ";
                  break;
              case "alt":
                  /* sett inn kall for å kjøre ALT her */
                     graph.setSourceNode(graph.getNodes().get(Integer.parseInt(txt_fra.getText())));
                     graph.setDestinationNode(graph.getNodes().get(Integer.parseInt(txt_til.getText())));
-                    ALT.calculateShortestPathFromSource(graph.getSourceNode(), graph.getDestinationNode(), graph.getNumberOfNodes(), graph.getNodes());
-                    noder = graph.getDestinationNode().getShortestPath().size();
+                    graph.alt(graph.getSourceNode(), graph.getDestinationNode());
+                    //ALT.calculateShortestPathFromSource(graph.getSourceNode(), graph.getDestinationNode(), graph.getNumberOfNodes(), graph.getNodes());
+                    //noder = graph.getDestinationNode().getShortestPath().size();
                  alg = "ALT-algoritmen ";
                  break;
              default:
@@ -330,7 +343,7 @@ import java.util.List;
  /*
      Vise frem kjøretid for bilen, hvis målet ble funnet:
  */
-         if (graph.getDestinationNode().getEdge() == null || graph.getDestinationNode().getDistance() == Integer.MAX_VALUE || graph.getDestinationNode().getShortestPath().size() == 0) {
+         if (graph.getDestinationNode().getData() == null) {
              tur += "  Fant ikke veien!";
          } else {
              int tid = graph.getDestinationNode().getTime();

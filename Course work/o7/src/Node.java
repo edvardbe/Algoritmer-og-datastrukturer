@@ -5,11 +5,11 @@ public class Node {
 
     private Vector vector;
 
-    private Object data;
+    private Pre data;
 
     private int name;
 
-    private int time;
+    private int time = 0;
     
     private List<Node> shortestPath = new LinkedList<>();
     
@@ -19,7 +19,6 @@ public class Node {
 
     private boolean visited = false;
     
-    private double heuristicDistance;
      
     public Node(int name) {
         this.name = name;
@@ -28,6 +27,7 @@ public class Node {
     public Node(int name, double latitude, double longitude) {
         this.name = name;
         this.vector = new Vector(latitude, longitude);
+        this.data = new Pre();
     }
     // getters and setters
 
@@ -54,11 +54,11 @@ public class Node {
         return this.shortestPath;
     }
 
-    public Object getData(){
+    public Pre getData(){
         return this.data;
     }
 
-    public void setData(Object data){
+    public void setData(Pre data){
         this.data = data;
     }
 
@@ -89,12 +89,6 @@ public class Node {
         this.time = time;
     }
 
-    public void setHeuristic(double euclideanDistance) {
-        this.heuristicDistance = euclideanDistance;
-    }
-
-    public double getHeuristic() {
-        return this.heuristicDistance;
-    }
+    
     
 }

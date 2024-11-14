@@ -1,6 +1,3 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -14,13 +11,13 @@ import java.util.Scanner;
  */
 public class ALT{
     public static void calculateShortestPathFromSource(Node source, Node destination, int numberOfNodes, HashMap<Integer, Node> nodes){
-        Pre pre = new Pre();
-        pre.init_pre(source, numberOfNodes, nodes);
         
-        PriorityQueue<Node> priorityQueue = new PriorityQueue<>(Comparator.comparingDouble(n -> n.getDistance() + n.getHeuristic()));
+        PriorityQueue<Node> priorityQueue = makePriorityQueue(nodes, source, destination);
+
+        /* PriorityQueue<Node> priorityQueue = new PriorityQueue<>(Comparator.comparingDouble(n -> n.getDistance() + n.getHeuristic()));
         source.setDistance(0);
         source.setHeuristic(euclideanDistance(source, destination)); // Set initial heuristic
-        priorityQueue.add(source);
+        priorityQueue.add(source); */
     
         while (!priorityQueue.isEmpty()){
             Node currentNode = priorityQueue.poll();
@@ -38,7 +35,6 @@ public class ALT{
                     boolean updated = calculateMinimumDistance(adjacentNode, edgeWeight, edgeTime, currentNode);
                     if (updated) {
                         priorityQueue.remove(adjacentNode);  // Remove to reinsert with updated priority
-                        adjacentNode.setHeuristic(euclideanDistance(adjacentNode, destination));  // Set heuristic for adjacent
                         priorityQueue.add(adjacentNode);
                     }
                 }
@@ -60,26 +56,21 @@ public class ALT{
         return false;
     }
 
-    private static PriorityQueue makePriorityQueue(HashMap<Integer, Node> nodes, Node source, Node destination){
-        PriorityQueue<Node> priorityQueue = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getHeuristic() + a.getDistance()));
-        for (Node n : nodes.values()){
-            n.setHeuristic(euclideanDistance(n, destination));
-            priorityQueue.add(n);
-        }
+    private static PriorityQueue<Node> makePriorityQueue(HashMap<Integer, Node> nodes, Node source, Node destination){
+        PriorityQueue<Node> priorityQueue = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getData().get_fullDepth()));
         source.setDistance(0);
         source.setTime(0);
+        priorityQueue.add(source);
         return priorityQueue;
     }
-    public static double euclideanDistance(Node source, Node destination){
-        return Math.sqrt(Math.pow(source.getVector().getLatitude() - destination.getVector().getLatitude(), 2) + Math.pow(source.getVector().getLongitude() - destination.getVector().getLongitude(), 2));
-    }
+    
 
     public static void main(String[] args) {
         Graph graph = new Graph();
 
         List<double[]> nodeList = graph.read_from_file("test-noder.txt");
         List<double[]> edgeList = graph.read_from_file("test-kanter.txt");
-        Map<Integer, InterestPoint> interestPoints = graph.readInterestPoints("interessepkt.txt");
+        Map<Integer, InterestPoint> interestPoints = graph.readInterestPoints("test-interessepkt.txt");
 
         graph.init_graph(nodeList, edgeList, interestPoints);
         System.out.println("Graph initialized");

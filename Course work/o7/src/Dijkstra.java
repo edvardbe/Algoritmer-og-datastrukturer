@@ -15,8 +15,6 @@ public class Dijkstra {
     
 
     public static void calculateShortestPathFromSource(Node sourceNode, Node destinationNode, int numberOfNodes, HashMap<Integer, Node> nodes) {
-        Pre pre = new Pre();
-        pre.init_pre(sourceNode, numberOfNodes, nodes);
         // Initialize distances
         sourceNode.setDistance(0);
         sourceNode.setTime(0);

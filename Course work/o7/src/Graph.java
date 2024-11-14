@@ -3,49 +3,83 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Set;
 
 public class Graph {
     private Node sourceNode;
     private Node destinationNode;
     private int numberOfNodes;
     private int numberOfEdges;
+    private PriorityQueue<Node> pq;
     private HashMap<Integer, Node> nodes;
     public Graph(){};
 
     
 
-    public void dijkstra(Node source){
-        Pre pre = new Pre();
-        pre.init_pre(source, numberOfNodes, nodes);
-        PriorityQueue<Node> priorityQueue = new PriorityQueue<>();
-        for(int i = numberOfNodes; i > 1; --i){
-            Node n = extract_min();
+    public void dijkstra(Node source, Node destination){
+        pq = new PriorityQueue<>((a, b) -> a.getData().get_depth() - b.getData().get_depth());
+        ((Pre) source.getData()).depth = 0;
+        pq.add((Node) source);
+        while (!pq.isEmpty()){
+            Node n = pq.poll();
+            if (n.equals(destination)){
+                break;
+            }
             for (Edge e = n.getEdge(); e != null; e = e.getNext()){
-                shorten(n , e);
+                shorten_dijk(n, e, pq);
             }
         }
     }
 
-    public Node extract_min(){
-        Node min = null;
-        for (Node n : nodes.values()){
-            if (min == null || ((Pre) n.getData()).get_depth() < ((Pre) min.getData()).get_depth()){
-                min = n;
+    public void alt(Node source, Node destination){
+        pq = new PriorityQueue<>((a, b) -> a.getData().get_fullDepth() - b.getData().get_fullDepth());
+        ((Pre) source.getData()).depth = 0;
+        pq.add((Node) source);
+        while (!pq.isEmpty()){
+            Node n = pq.poll();
+            if (n.equals(destination)){
+                break;
+            }
+            for (Edge e = n.getEdge(); e != null; e = e.getNext()){
+                shorten_alt(n, e, pq, destination);
             }
         }
-        return min;
     }
 
-    public void shorten(Node n, Edge e){
-        Node m = e.getTo();
-        if (((Pre) m.getData()).get_depth() > ((Pre) n.getData()).get_depth() + e.getDriveTime()){
-            ((Pre) m.getData()).depth = ((Pre) n.getData()).depth + e.getDriveTime();
-            ((Pre) m.getData()).pre = n;
+
+    public void shorten_dijk(Node node, Edge edge, PriorityQueue<Node> pq){
+        Pre pre = node.getData(), edgeEnd = edge.getTo().getData();
+        if (pre.get_depth() + edge.getDistance() < edgeEnd.get_depth()){
+            edgeEnd.depth = pre.get_depth() + edge.getDistance();
+            edgeEnd.pre = node;
+            edge.getTo().setTime(node.getTime() + edge.getDriveTime());
+
+            pq.add(edge.getTo());
         }
+    }
+
+    public void shorten_alt(Node node, Edge edge, PriorityQueue<Node> pq, Node destination){
+        Pre pre = node.getData(), edgeEnd = edge.getTo().getData();
+        if (pre.get_depth() + edge.getDistance() < edgeEnd.get_depth()){
+            if(edgeEnd.distanceToEnd == -1){
+                edgeEnd.distanceToEnd = (int) Math.round(euclideanDistance(edge.getTo(), destination));
+            }
+            edgeEnd.depth = pre.get_depth() + edge.getDistance();
+            edgeEnd.pre = node;
+            edge.getTo().setTime(node.getTime() + edge.getDriveTime());
+            edgeEnd.fullDepth = edgeEnd.depth + edgeEnd.distanceToEnd;
+            pq.add(edge.getTo());
+        }
+    }
+
+    public static double euclideanDistance(Node source, Node destination){
+        return Math.sqrt(Math.pow(source.getVector().getLatitude() - destination.getVector().getLatitude(), 2) + Math.pow(source.getVector().getLongitude() - destination.getVector().getLongitude(), 2));
     }
 
 
@@ -230,12 +264,16 @@ public class Graph {
         java.util.Scanner scanner = new java.util.Scanner(System.in);
         while (true) {
             System.out.println("\n ------------- \n");
-            System.out.println("Press x to exit");
+            System.out.println("Press p to print graph, x to exit,");
             System.out.println("Select source node: ");
             try {
                 String input = scanner.nextLine();
                 if (input.equals("x")) {
                     break;
+                }
+                else if (input.equals("p")) {
+                    graph.print_graph();
+                    continue;
                 }
                 source = graph.getNodes().get(Integer.parseInt(input));
                 graph.setSourceNode(source);
@@ -255,19 +293,23 @@ public class Graph {
                 }
                 destination = graph.getNodes().get(Integer.parseInt(input));
                 graph.setDestinationNode(destination);
-                Dijkstra.calculateShortestPathFromSource(source, destination, graph.getNumberOfNodes(), graph.getNodes());
+                graph.alt(source, destination);
                 System.out.println("Destination Node: " + destination.getName());
-                if (destination.getShortestPath().size() == 0) {
+                int count = 0;
+                System.out.println("Shortest path: ");
+                Node node = destination;
+                while (node != null) {
+                    System.out.print(" ->  " + node.getName());
+                    node = (Node) ((Pre) node.getData()).get_pre();
+                    count++;
+                }
+                System.out.println();
+                if (count == 1) {
                     System.out.println("No path found");
-                } else {
-                    System.out.println("Shortest path: ");
-                    for (Node n : destination.getShortestPath()) {
-                        System.out.print(n.getName() + " ");
-                    }
-                    System.out.println();
                 }
             } catch (Exception e) {
                 System.out.println("Invalid input");
+                e.printStackTrace();
                 continue;
             }
         }

@@ -2,10 +2,14 @@ import java.util.HashMap;
 
 public class Pre {
     int depth;
+    int fullDepth;
+    int distanceToEnd;
     Node pre;
     static int inf = 1_000_000_000;
     public Pre(){
         depth = inf;
+        fullDepth = inf;
+        distanceToEnd = -1;
     }
 
     public int get_depth() { 
@@ -14,12 +18,12 @@ public class Pre {
     public Node get_pre() {
         return pre;
     }
-    public void init_pre(Node s, int numberOfNodes, HashMap<Integer, Node> nodes){
-        for (Node n : nodes.values()){
-            Pre p = new Pre();
-            n.setData(p);
-        }
-        ((Pre) s.getData()).depth = 0;
+    public int get_fullDepth() {
+        return fullDepth;
     }
 
+    public int getDistanceToEnd() {
+        return this.distanceToEnd;
+    }
+    
 }

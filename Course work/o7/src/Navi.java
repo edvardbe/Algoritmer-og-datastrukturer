@@ -20,8 +20,10 @@
  */
 
  import java.io.*;
- import java.util.Date;
- import java.util.Locale;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.List;
  
@@ -313,9 +315,6 @@ import java.util.List;
         noder = 0;
         
         while (node != null) {
-            if (color == Color.YELLOW) {
-                System.out.println("Last node: " + node.getName());
-            }
             MapMarkerDot prikk;
             prikk = new MapMarkerDot(rutelag, grad(node.getVector().getLatitude()), grad(node.getVector().getLongitude()));
             map().addMapMarker(prikk);
@@ -354,10 +353,10 @@ import java.util.List;
                  source = graph.getNodes().get(Integer.parseInt(txt_fra.getText()));
                 destination = graph.getNodes().get(Integer.parseInt(txt_til.getText()));
                 graph.dijkstra(source, destination);
+                alg = "Dijkstras algoritme ";
                 draw_algorithm(tur, alg, tid1, destination);
                  //Dijkstra.calculateShortestPathFromSource(graph.getSourceNode(), graph.getDestinationNode(), graph.getNumberOfNodes(), graph.getNodes());
                  //noder = graph.getDestinationNode().getShortestPath().size();
-                 alg = "Dijkstras algoritme ";
                  break;
              case "alt":
                  /* sett inn kall for å kjøre ALT her */
@@ -366,10 +365,10 @@ import java.util.List;
                     source = graph.getNodes().get(Integer.parseInt(txt_fra.getText()));
                     destination = graph.getNodes().get(Integer.parseInt(txt_til.getText()));
                     graph.alt(source, destination);
+                    alg = "ALT-algoritmen ";
                     draw_algorithm(tur, alg, tid1, destination);;
                     //ALT.calculateShortestPathFromSource(graph.getSourceNode(), graph.getDestinationNode(), graph.getNumberOfNodes(), graph.getNodes());
                     //noder = graph.getDestinationNode().getShortestPath().size();
-                 alg = "ALT-algoritmen ";
                  break;
             case "find_closest":
                 graph.setSourceNode(graph.getNodes().get(Integer.parseInt(txt_fra.getText())));
@@ -377,17 +376,41 @@ import java.util.List;
                 int interestPointCode = Integer.parseInt(selectedType.split(" - ")[0]);
                 Node[] closestInterestPoints = graph.find_closest_interestpoints(graph.getSourceNode(), interestPointCode, graph.getNodes());
                 System.out.println("Number of interestpoints: " + closestInterestPoints.length);
-        
-                alg = "Finner 4 nærmeste interessepunkter: ";
+                tur = "Tider - " + txt_fra.getText() + ":";
+                alg = "Noder: ";
                 Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW};
                 for (int i = 0; i < closestInterestPoints.length; i++) {
-                    System.out.println("Drawing interest points");
                     destination = closestInterestPoints[i];
-                    System.out.println("Destination node: " + destination.getName() + ", iteration: " + i);
-                    System.out.println("Color: " + colors[i]);
+                    InterestPoint interestPoint = (InterestPoint) destination;
+                    Map<Integer, String> interestPointTypes = new HashMap<>();
+                    interestPointTypes.put(1, "Stedsnavn");
+                    interestPointTypes.put(2, "Bensinstasjon");
+                    interestPointTypes.put(4, "Ladestasjon");
+                    interestPointTypes.put(8, "Spisested");
+                    interestPointTypes.put(16, "Drikkested");
+                    interestPointTypes.put(32, "Overnattingsted");
+                    int type = interestPoint.getType();
+                    alg += interestPoint.getDescription() + ": ";
+                    for (Map.Entry<Integer, String> entry : interestPointTypes.entrySet()) {
+                        if ((type & entry.getKey()) != 0) {
+                            alg += " " + entry.getValue();
+                        }
+                    }
+                    alg += " | ";
+                    int tid = interestPoint.getTime();
+                    int tt = tid / 360000; tid -= 360000 * tt;
+                    int mm = tid / 6000; tid -= 6000 * mm;
+                    int ss = tid / 100;
+                    int hs = tid % 100;
+                    tur += String.format("  %d:%02d:%02d,%02d  %d", tt, mm, ss, hs, destination.getDistance()) + " | ";
+                    
                     // Set the color for each route
                     tegn_ruta(colors[i]);
                 }
+                System.out.println(alg);
+                System.out.println(tur);
+                lbl_tur.setText(tur);
+                lbl_alg.setText(alg);
                 break;
              default:
                  System.exit(0);
@@ -417,11 +440,12 @@ import java.util.List;
                 int mm = tid / 6000; tid -= 6000 * mm;
                 int ss = tid / 100;
                 int hs = tid % 100;
-                tur = String.format("%s Kjøretid %d:%02d:%02d,%02d   ()", tur, tt, mm, ss, hs);
                 tegn_ruta(Color.YELLOW);
+                tur = String.format("%s Kjøretid %d:%02d:%02d,%02d, antall noder: %d", tur, tt, mm, ss, hs, this.noder);
+
             }
             float sek = (float)(tid2.getTime() - tid1.getTime()) / 1000;
-            alg = String.format("%s prosesserte %,d noder på %2.3fs. %2.0f noder/ms", alg, noder, sek, noder/sek/1000);
+            alg += String.format(" prosesserte %,d noder på %2.3fs. %2.0f noder/ms", graph.getNumberOfProcessed(), sek, graph.getNumberOfProcessed()/sek/1000);
             lbl_tur.setText(tur);
             lbl_alg.setText(alg);
             System.out.println(tur);
@@ -431,6 +455,8 @@ import java.util.List;
             graph.init_graph(nodeList, edgeList, interestPoints); */
         
      }
+
+
  
      //Skriving i tekstfelt
      public void changedUpdate(DocumentEvent ev) {
@@ -529,7 +555,7 @@ import java.util.List;
      Graph graph = new Graph();
      List<double[]> nodeList = graph.read_from_file("noder.txt");
      List<double[]> edgeList = graph.read_from_file("kanter.txt");
-     Map<Integer, InterestPoint> interestPoints = graph.readInterestPoints("interessepkt.txt");
+     Map<Integer, InterestPoint> interestPoints = graph.read_interest_points("interessepkt.txt");
      graph.init_graph(nodeList, edgeList, interestPoints);
 
      

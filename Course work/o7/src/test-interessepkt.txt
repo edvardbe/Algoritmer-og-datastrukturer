@@ -1,5 +1,0 @@
-    4
-1	2	"N1"
-2	56	"Hotel"
-4	2	"Orkan"
-6	8	"Þrastalundur"

@@ -1,7 +1,9 @@
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -18,159 +20,155 @@ public class Graph {
     private Node destinationNode;
     private int numberOfNodes;
     private int numberOfEdges;
+    private int numberOfLandmarks;
+    private int numberOfProcessed = 0;
     private PriorityQueue<Node> pq;
     private HashMap<Integer, Node> nodes;
-    public Graph(){};
-
-    
-
-    public void dijkstra(Node source, Node destination){
-        pq = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getData().get_time()));
-        ((Pre) source.getData()).time = 0;
-        pq.add((Node) source);
-        while (!pq.isEmpty()){
-            Node n = pq.poll();
-            if (n.equals(destination)){
-                break;
-            }
-            for (Edge e = n.getEdge(); e != null; e = e.getNext()){
-                shorten_dijk(n, e, pq);
-            }
-        }
-    }
-
-    public void alt(Node source, Node destination){
-        pq = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getData().get_full_time() - a.getData().get_time()));
-        ((Pre) source.getData()).time = 0;
-        pq.add((Node) source);
-        while (!pq.isEmpty()){
-            Node n = pq.poll();
-            if (n.equals(destination)){
-                break;
-            }
-            for (Edge e = n.getEdge(); e != null; e = e.getNext()){
-                shorten_alt(n, e, pq, destination);
-            }
-        }
-    }
-    
-
-    public InterestPoint[] find_closest_interestpoints(Node source, int interest_point_code, HashMap<Integer, Node> nodes){
-        pq = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getData().get_time()));
-        InterestPoint[] closestInterestPoints = new InterestPoint[4];
-        Set<Node> visitedNodes = new HashSet<>();
-        int count = 0;
-        int i = 0;
-        // Reset all nodes
-    
-
-        // Initialize distances
-        /* sourceNode.setDistance(0);
-        sourceNode.setTime(0); */
-        sourceNode.getData().time = 0;
-
-        pq.add(sourceNode);
-        while (!pq.isEmpty() && count < 4) {
-            Node currentNode = pq.poll();
-
-            if (visitedNodes.contains(currentNode)) {
-                continue;
-            }
-
-            visitedNodes.add(currentNode);
+        public Graph(){};
 
 
-            if (currentNode.isInterestPoint()) {
-                System.out.println("Found interest point: " + currentNode.getName());
-                InterestPoint interestPoint = (InterestPoint) currentNode;
-                if (interestPoint.getType() == interest_point_code){
-                    closestInterestPoints[count] = interestPoint;
-                    count++;
+        public void dijkstra(Node source, Node destination){
+            this.numberOfProcessed = 0;
+            pq = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getData().get_time()));
+            ((Pre) source.getData()).time = 0;
+            pq.add((Node) source);
+            while (!pq.isEmpty()){
+                Node n = pq.poll();
+                numberOfProcessed++;
+                if (n.equals(destination)){
+                    break;
+                }
+                for (Edge e = n.getEdge(); e != null; e = e.getNext()){
+                    shorten_dijk(n, e, pq);
                 }
             }
-            i++;
-            
-
-            for (Edge e = currentNode.getEdge(); e != null; e = e.getNext()) {
-                shorten_dijk(currentNode, e, pq);
-            }
         }
-        System.out.println("Iterations: " + i + ", found: " + count + " interest points of type " + interest_point_code);
-
-        return closestInterestPoints;
- 
-    }
-
-
-    public void shorten_dijk(Node node, Edge edge, PriorityQueue<Node> pq){
-        Pre pre = node.getData(), edgeEnd = edge.getTo().getData();
-        int new_time = pre.get_time() + edge.getDriveTime();
-        if (new_time < edgeEnd.get_time()){
-            edgeEnd.time = new_time;
-            edgeEnd.pre = node;
-            edge.getTo().setTime(node.getTime() + edge.getDriveTime());
-            pq.add(edge.getTo());
-        }
-    }
-
-    public void shorten_alt(Node node, Edge edge, PriorityQueue<Node> pq, Node destination){
-        Pre pre = node.getData(), edgeEnd = edge.getTo().getData();
-        int new_time = pre.get_time() + edge.getDriveTime();
-        System.out.println("New time: " + new_time);
-        if (new_time < edgeEnd.get_time()){
-            System.out.println("New time is less than edgeEnd time");
-            if(edgeEnd.time_to_end == -1){
-                edgeEnd.time_to_end = (int) Math.round(euclideanDistance(edge.getTo(), destination));
-            }
-            edgeEnd.time = new_time;
-            edgeEnd.pre = node;
-            edge.getTo().setTime(node.getTime() + edge.getDriveTime());
-            edgeEnd.full_time = edgeEnd.time + edgeEnd.time_to_end;
-            pq.add(edge.getTo());
-        }
-    }
-
-    public static double euclideanDistance(Node source, Node destination){
-        return Math.sqrt(Math.pow(source.getVector().getLatitude() - destination.getVector().getLatitude(), 2) + Math.pow(source.getVector().getLongitude() - destination.getVector().getLongitude(), 2));
-    }
-
-
-    /**
-     * Initiates a graph using the {@link #read_from_file(String path)}
-     * method. Initiates N, amount of nodes, and E, amount of edges,
-     * and the array of nodes, nodes.
-     * @param path
-     */
-    public void init_graph(List<double[]> nodeList, List<double[]> edgeList, Map<Integer, InterestPoint> interestPoints){
     
-        this.numberOfNodes = (int) nodeList.get(0)[0];
-        this.numberOfEdges = (int) edgeList.get(0)[0];
-        this.nodes = new HashMap<>();
-        for (int i = 1; i < numberOfNodes + 1; i++) {
-            int key = (int) nodeList.get(i)[0];
-            double latitude = nodeList.get(i)[1] * Math.PI / 180;
-            double longitude = nodeList.get(i)[2] * Math.PI / 180;
-            if(interestPoints.containsKey(key)) {
-                InterestPoint interestPoint = interestPoints.get(key);
-                nodes.put(key, new InterestPoint(key, latitude, longitude, interestPoint.getType(), interestPoint.getDescription()));
-                nodes.get(key).setIsInterestPoint(true);;
-            } else {
-                nodes.put(key, new Node(key, latitude, longitude));
+        public void alt(Node source, Node destination){
+            this.numberOfProcessed = 0;
+            pq = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getData().get_full_time() - a.getData().get_time()));
+            ((Pre) source.getData()).time = 0;
+            pq.add((Node) source);
+            while (!pq.isEmpty()){
+                numberOfProcessed++;
+                Node n = pq.poll();
+                if (n.equals(destination)){
+                    break;
+                }
+                for (Edge e = n.getEdge(); e != null; e = e.getNext()){
+                    shorten_alt(n, e, pq, destination);
+                }
             }
         }
-
-        for (int i = 1; i < numberOfEdges + 1; i++){
-            int from = (int) edgeList.get(i)[0];
-            int to = (int) edgeList.get(i)[1];
-
-            Node toNode = nodes.get(to);
-            Edge fromEdge = nodes.get(from).getEdge();
-            int driveTime = (int) edgeList.get(i)[2];
-            int distance = (int) edgeList.get(i)[3];
-            int speedLimit = (int) edgeList.get(i)[4];
-            Edge e = new Edge(toNode, fromEdge, driveTime, distance, speedLimit);
-            nodes.get(from).setEdge(e);
+        
+    
+        public InterestPoint[] find_closest_interestpoints(Node source, int interest_point_code, HashMap<Integer, Node> nodes){
+            pq = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getData().get_time()));
+            InterestPoint[] closestInterestPoints = new InterestPoint[4];
+            Set<Node> visitedNodes = new HashSet<>();
+            int count = 0;
+            // Reset all nodes
+        
+    
+            // Initialize distances
+            /* sourceNode.setDistance(0);
+            sourceNode.setTime(0); */
+            sourceNode.getData().time = 0;
+    
+            pq.add(sourceNode);
+            while (!pq.isEmpty() && count < 4) {
+                Node currentNode = pq.poll();
+    
+                if (visitedNodes.contains(currentNode)) {
+                    continue;
+                }
+                visitedNodes.add(currentNode);
+                if (currentNode.isInterestPoint() && !currentNode.equals(sourceNode)) {
+                    InterestPoint interestPoint = (InterestPoint) currentNode;
+                    if ((interestPoint.getType() & interest_point_code) != 0) {
+                        closestInterestPoints[count] = interestPoint;
+                        count++;
+                    }
+                }
+                for (Edge e = currentNode.getEdge(); e != null; e = e.getNext()) {
+                    shorten_dijk(currentNode, e, pq);
+                }
+            }
+            return closestInterestPoints;
         }
+    
+    
+        public void shorten_dijk(Node node, Edge edge, PriorityQueue<Node> pq){
+            Pre pre = node.getData(), edgeEnd = edge.getTo().getData();
+            int new_time = pre.get_time() + edge.getDriveTime();
+            if (new_time < edgeEnd.get_time()){
+                edgeEnd.time = new_time;
+                edgeEnd.pre = node;
+                edge.getTo().setDistance(node.getDistance() + edge.getDistance());
+                edge.getTo().setTime(node.getTime() + edge.getDriveTime());
+                pq.add(edge.getTo());
+            }
+        }
+    
+        public void shorten_alt(Node node, Edge edge, PriorityQueue<Node> pq, Node destination){
+            Pre pre = node.getData(), edgeEnd = edge.getTo().getData();
+            int new_time = pre.get_time() + edge.getDriveTime();
+            System.out.println("New time: " + new_time);
+            if (new_time < edgeEnd.get_time()){
+                System.out.println("New time is less than edgeEnd time");
+                if(edgeEnd.time_to_end == -1){
+                    edgeEnd.time_to_end = (int) Math.round(euclideanDistance(edge.getTo(), destination));
+                }
+                edgeEnd.time = new_time;
+                edgeEnd.pre = node;
+                edge.getTo().setDistance(node.getDistance() + edge.getDistance());
+                edge.getTo().setTime(node.getTime() + edge.getDriveTime());
+                edgeEnd.full_time = edgeEnd.time + edgeEnd.time_to_end;
+                pq.add(edge.getTo());
+            }
+        }
+    
+        public static double euclideanDistance(Node source, Node destination){
+            return Math.sqrt(Math.pow(source.getVector().getLatitude() - destination.getVector().getLatitude(), 2) + Math.pow(source.getVector().getLongitude() - destination.getVector().getLongitude(), 2));
+        }
+    
+    
+        /**
+         * Initiates a graph using the {@link #read_from_file(String path)}
+         * method. Initiates N, amount of nodes, and E, amount of edges,
+         * and the array of nodes, nodes.
+         * @param path
+         */
+        public void init_graph(List<double[]> nodeList, List<double[]> edgeList, Map<Integer, InterestPoint> interestPoints){
+        
+            this.numberOfNodes = (int) nodeList.get(0)[0];
+            this.numberOfEdges = (int) edgeList.get(0)[0];
+            this.nodes = new HashMap<>();
+            for (int i = 1; i < numberOfNodes + 1; i++) {
+                int key = (int) nodeList.get(i)[0];
+                double latitude = nodeList.get(i)[1] * Math.PI / 180;
+                double longitude = nodeList.get(i)[2] * Math.PI / 180;
+                if(interestPoints.containsKey(key)) {
+                    InterestPoint interestPoint = interestPoints.get(key);
+                    nodes.put(key, new InterestPoint(key, latitude, longitude, interestPoint.getType(), interestPoint.getDescription()));
+                    nodes.get(key).setIsInterestPoint(true);;
+                } else {
+                    nodes.put(key, new Node(key, latitude, longitude));
+                }
+            }
+
+            for (int i = 1; i < numberOfEdges + 1; i++){
+                int from = (int) edgeList.get(i)[0];
+                int to = (int) edgeList.get(i)[1];
+
+                Node toNode = nodes.get(to);
+                Edge fromEdge = nodes.get(from).getEdge();
+                int driveTime = (int) edgeList.get(i)[2];
+                int distance = (int) edgeList.get(i)[3];
+                int speedLimit = (int) edgeList.get(i)[4];
+                Edge e = new Edge(toNode, fromEdge, driveTime, distance, speedLimit);
+                nodes.get(from).setEdge(e);
+            }
     }
 
     public void print_graph(){
@@ -231,6 +229,10 @@ public class Graph {
         this.destinationNode = destinationNode;
     }
 
+    public int getNumberOfProcessed(){
+        return numberOfProcessed;
+    }
+
     private double[] parseLine(String line){
         List<String> filteredTokens = filterEmptyTokens(line);
         
@@ -276,7 +278,7 @@ public class Graph {
         return list;
     }
 
-    public Map<Integer, InterestPoint> readInterestPoints(String path) {
+    public Map<Integer, InterestPoint> read_interest_points(String path) {
         Map<Integer, InterestPoint> interestPoints = new HashMap<>();
 
         try (BufferedReader b = new BufferedReader(new FileReader(path))) {
@@ -299,20 +301,22 @@ public class Graph {
 
         return interestPoints;
     }
+    
 
     public void reset(){
         for (Node n : nodes.values()){
             n.setData(new Pre());
             n.setTime(0);
+            n.setDistance(0);
         }
     }
 
     public static void main(String[] args) {
         Graph graph = new Graph();
 
-        List<double[]> nodeList = graph.read_from_file("island/noder.txt");
-        List<double[]> edgeList = graph.read_from_file("island/kanter.txt");
-        Map<Integer, InterestPoint> interestPoints = graph.readInterestPoints("island/interessepkt.txt");
+        List<double[]> nodeList = graph.read_from_file("noder.txt");
+        List<double[]> edgeList = graph.read_from_file("kanter.txt");
+        Map<Integer, InterestPoint> interestPoints = graph.read_interest_points("interessepkt.txt");
 
         System.out.println("Graph initialized");
         System.out.println("\n ------------- \n");
@@ -323,14 +327,16 @@ public class Graph {
             graph = new Graph();
             graph.init_graph(nodeList, edgeList, interestPoints);
             System.out.println("\n ------------- \n");
-            System.out.println("Press 'x' to exit,");
+            System.out.println("Press 'x' to exit, 'm' to make landmark files");
             System.out.println("Select source node: ");
             try {
                 String input = scanner.nextLine();
                 if (input.equals("x")) {
                     break;
-                }
-                
+                } else if(input.equals("m")) {
+                    graph.makeLandmarkFiles();
+                    continue;
+                } 
                 source = graph.getNodes().get(Integer.parseInt(input));
                 graph.setSourceNode(source);
                 System.out.println("Source Node: " + source);
@@ -344,7 +350,7 @@ public class Graph {
                 System.out.println("\n ------------- \n");
                 System.out.println("Press 's' for shortest path, 'i' for interest points, 'x' to exit");
                 String input = scanner.nextLine();
-                if(scanner.equals("x")){
+                if(input.equals("x")){
                     break;
                 } else if(input.equals("i")){
                     System.out.println("Select interest point type: ");
@@ -362,7 +368,8 @@ public class Graph {
                         }
                     }
                     continue;
-                } else if (!input.equals("s")) {
+                } 
+                else if (!input.equals("s")) {
                     System.out.println("Invalid input");
                     continue;
                 }
@@ -423,5 +430,31 @@ public class Graph {
             }
         }
         scanner.close();
+    }
+
+    public void makeLandmarkFiles(){
+        Map<String, Node> landmarks = new HashMap<>();
+        landmarks.put("MOHKO", nodes.get(478452));
+        /* landmarks.put("BERGEN", nodes.get(5542364));
+        landmarks.put("NØRREMØLLE", nodes.get(1361309));
+        landmarks.put("NORDKAPP", nodes.get(2531818)); */
+        List<int[]> landmark_data = new ArrayList<>();
+        try {
+            FileOutputStream fraOut = new FileOutputStream("tillandemarker.txt");
+            Node sourceNode = nodes.get(0);
+            Node lastNode = nodes.get(nodes.size() - 1);
+            this.dijkstra(sourceNode, lastNode);
+            for (Node node : nodes.values()){
+                while(node.getData().get_pre() != null){
+                    node = (Node) node.getData().get_pre();
+                }
+                System.out.println("Node: " + node.getName() + " Landmark data: " + node.getData().get_time());
+            }
+            
+            fraOut.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
     }
 }

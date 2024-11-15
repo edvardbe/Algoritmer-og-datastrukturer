@@ -15,7 +15,7 @@ public class Node {
     
     private Edge edge;
 
-    private int distance = Integer.MAX_VALUE;
+    private int distance = 0;
 
     private boolean visited = false;
 

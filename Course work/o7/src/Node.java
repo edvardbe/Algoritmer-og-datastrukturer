@@ -18,6 +18,8 @@ public class Node {
     private int distance = Integer.MAX_VALUE;
 
     private boolean visited = false;
+
+    private boolean isInterestPoint = false;
     
      
     public Node(int name) {
@@ -89,6 +91,16 @@ public class Node {
         this.time = time;
     }
 
-    
-    
+    public boolean isInterestPoint(){
+        return this.isInterestPoint;
+    }
+
+    public void setIsInterestPoint(boolean isInterestPoint){
+        this.isInterestPoint = isInterestPoint;
+    }
+
+    @Override
+    public String toString() {
+        return name + "(" + vector.getLatitude() + ", " + vector.getLongitude() + ")";
+    }
 }

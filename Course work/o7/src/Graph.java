@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -39,7 +40,7 @@ public class Graph {
     }
 
     public void alt(Node source, Node destination){
-        pq = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getData().get_full_time()));
+        pq = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getData().get_full_time() - a.getData().get_time()));
         ((Pre) source.getData()).time = 0;
         pq.add((Node) source);
         while (!pq.isEmpty()){
@@ -52,12 +53,60 @@ public class Graph {
             }
         }
     }
+    
+
+    public InterestPoint[] find_closest_interestpoints(Node source, int interest_point_code, HashMap<Integer, Node> nodes){
+        pq = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getData().get_time()));
+        InterestPoint[] closestInterestPoints = new InterestPoint[4];
+        Set<Node> visitedNodes = new HashSet<>();
+        int count = 0;
+        int i = 0;
+        // Reset all nodes
+    
+
+        // Initialize distances
+        /* sourceNode.setDistance(0);
+        sourceNode.setTime(0); */
+        sourceNode.getData().time = 0;
+
+        pq.add(sourceNode);
+        while (!pq.isEmpty() && count < 4) {
+            Node currentNode = pq.poll();
+
+            if (visitedNodes.contains(currentNode)) {
+                continue;
+            }
+
+            visitedNodes.add(currentNode);
+
+
+            if (currentNode.isInterestPoint()) {
+                System.out.println("Found interest point: " + currentNode.getName());
+                InterestPoint interestPoint = (InterestPoint) currentNode;
+                if (interestPoint.getType() == interest_point_code){
+                    closestInterestPoints[count] = interestPoint;
+                    count++;
+                }
+            }
+            i++;
+            
+
+            for (Edge e = currentNode.getEdge(); e != null; e = e.getNext()) {
+                shorten_dijk(currentNode, e, pq);
+            }
+        }
+        System.out.println("Iterations: " + i + ", found: " + count + " interest points of type " + interest_point_code);
+
+        return closestInterestPoints;
+ 
+    }
 
 
     public void shorten_dijk(Node node, Edge edge, PriorityQueue<Node> pq){
         Pre pre = node.getData(), edgeEnd = edge.getTo().getData();
-        if (pre.get_time() + edge.getDriveTime() < edgeEnd.get_time()){
-            edgeEnd.time = pre.get_time() + edge.getDriveTime();
+        int new_time = pre.get_time() + edge.getDriveTime();
+        if (new_time < edgeEnd.get_time()){
+            edgeEnd.time = new_time;
             edgeEnd.pre = node;
             edge.getTo().setTime(node.getTime() + edge.getDriveTime());
             pq.add(edge.getTo());
@@ -66,11 +115,14 @@ public class Graph {
 
     public void shorten_alt(Node node, Edge edge, PriorityQueue<Node> pq, Node destination){
         Pre pre = node.getData(), edgeEnd = edge.getTo().getData();
-        if (pre.get_time() + edge.getDriveTime() < edgeEnd.get_time()){
+        int new_time = pre.get_time() + edge.getDriveTime();
+        System.out.println("New time: " + new_time);
+        if (new_time < edgeEnd.get_time()){
+            System.out.println("New time is less than edgeEnd time");
             if(edgeEnd.time_to_end == -1){
                 edgeEnd.time_to_end = (int) Math.round(euclideanDistance(edge.getTo(), destination));
             }
-            edgeEnd.time = pre.get_time() + edge.getDistance();
+            edgeEnd.time = new_time;
             edgeEnd.pre = node;
             edge.getTo().setTime(node.getTime() + edge.getDriveTime());
             edgeEnd.full_time = edgeEnd.time + edgeEnd.time_to_end;
@@ -101,6 +153,7 @@ public class Graph {
             if(interestPoints.containsKey(key)) {
                 InterestPoint interestPoint = interestPoints.get(key);
                 nodes.put(key, new InterestPoint(key, latitude, longitude, interestPoint.getType(), interestPoint.getDescription()));
+                nodes.get(key).setIsInterestPoint(true);;
             } else {
                 nodes.put(key, new Node(key, latitude, longitude));
             }
@@ -236,7 +289,7 @@ public class Graph {
                     int code = Integer.parseInt(filteredTokens.get(1));
                     String name = filteredTokens.get(2).replace("\"", ""); // Fjern anførselstegn
                     
-                    InterestPoint interestPoint = new InterestPoint(nodeNumber, (byte) code, name);
+                    InterestPoint interestPoint = new InterestPoint(nodeNumber, code, name);
                     interestPoints.put(nodeNumber, interestPoint);
                 }
             }
@@ -280,7 +333,7 @@ public class Graph {
                 
                 source = graph.getNodes().get(Integer.parseInt(input));
                 graph.setSourceNode(source);
-                System.out.println("Source Node: " + source.getName());
+                System.out.println("Source Node: " + source);
             } catch (Exception e) {
                 System.out.println("Invalid input");
                 e.printStackTrace();
@@ -289,8 +342,33 @@ public class Graph {
 
             try {
                 System.out.println("\n ------------- \n");
-                System.out.println("Select destination node: ");
+                System.out.println("Press 's' for shortest path, 'i' for interest points, 'x' to exit");
                 String input = scanner.nextLine();
+                if(scanner.equals("x")){
+                    break;
+                } else if(input.equals("i")){
+                    System.out.println("Select interest point type: ");
+                    System.out.println("1: Stedsnavn");
+                    System.out.println("2: Bensinstasjon");
+                    System.out.println("4: Ladestasjon");
+                    System.out.println("8: spisested");
+                    System.out.println("16: drikkested");
+                    System.out.println("32: overnattingssted");
+                    input = scanner.nextLine();
+                    Node[] closestInterestPoints = graph.find_closest_interestpoints(source, Integer.parseInt(input), graph.getNodes());
+                    for (Node node : closestInterestPoints) {
+                        if (node != null) {
+                            System.out.println("Interest point: " + node.getName());
+                        }
+                    }
+                    continue;
+                } else if (!input.equals("s")) {
+                    System.out.println("Invalid input");
+                    continue;
+                }
+
+                System.out.println("Select destination node: ");
+                input = scanner.nextLine();
                 destination = graph.getNodes().get(Integer.parseInt(input));
                 System.out.println("Press 'd' or 'a', x to exit");
                 input = scanner.nextLine();

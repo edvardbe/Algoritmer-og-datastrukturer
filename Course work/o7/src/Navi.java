@@ -61,6 +61,7 @@ import java.util.List;
  class vindu extends JPanel implements ActionListener, DocumentListener, JMapViewerEventListener {
      JButton btn_dijkstra = new JButton("Dijkstra");
      JButton btn_alt = new JButton("ALT");
+     JButton btn_find_closest = new JButton("Find 4 Closest");
      JButton btn_slutt = new JButton("Avslutt");
      JLabel lbl_fra = new JLabel();
      JLabel lbl_til = new JLabel();
@@ -71,6 +72,18 @@ import java.util.List;
      String gml_fra = "";
      String gml_til = "";
      JPanel kart = new JPanel(new BorderLayout());
+
+
+     String[] interestPointTypes = {
+        "1 - Stedsnavn",
+        "2 - Bensinstasjon",
+        "4 - Ladestasjon",
+        "8 - Spisested",
+        "16 - Drikkested",
+        "32 - Overnattingsted"
+    };
+
+    JComboBox<String> interestPointDropdown = new JComboBox<>(interestPointTypes);
      //JMapViewer stuff
      private final JMapViewerTree treeMap;
      private final JLabel zoomLabel;
@@ -106,9 +119,11 @@ import java.util.List;
          btn_dijkstra.setActionCommand("dijkstra");
          btn_dijkstra.setMnemonic(KeyEvent.VK_D);
          btn_alt.setActionCommand("alt");
+         btn_find_closest.setActionCommand("find_closest");
  
          btn_dijkstra.addActionListener(this);
          btn_alt.addActionListener(this);
+         btn_find_closest.addActionListener(this);
          btn_slutt.addActionListener(this);
  
          txt_fra.getDocument().addDocumentListener(this);
@@ -150,6 +165,12 @@ import java.util.List;
  
          c.gridx = 1;
          add(btn_alt, c);
+
+         c.gridx = 2;
+         add(interestPointDropdown, c);
+
+        c.gridx = 3;
+        add(btn_find_closest, c);
          
          vc.gridx = 1; vc.gridy = 4;
          vc.gridwidth = 3;
@@ -281,7 +302,7 @@ import java.util.List;
      }
  
      //Tegn ruta på kartet
-     public void tegn_ruta() {
+     public void tegn_ruta(Color color) {
  /*
      F.eks. ved å starte med målnoden, og følge forgjengere hele veien
          tilbake til startnoden. Nodene har bredde- og lengdegrader, som 
@@ -290,10 +311,15 @@ import java.util.List;
 
         Node node = destination;//graph.getDestinationNode();
         noder = 0;
+        
         while (node != null) {
+            if (color == Color.YELLOW) {
+                System.out.println("Last node: " + node.getName());
+            }
             MapMarkerDot prikk;
             prikk = new MapMarkerDot(rutelag, grad(node.getVector().getLatitude()), grad(node.getVector().getLongitude()));
             map().addMapMarker(prikk);
+            prikk.getStyle().setBackColor(color);
             node = (Node) ((Pre) node.getData()).get_pre();
             noder++;
         }
@@ -313,6 +339,8 @@ import java.util.List;
  
      //Knapper
      public void actionPerformed(ActionEvent e) {
+        map().removeAllMapMarkers();
+
          Date tid1 = new Date();
          String tur = "Kjøretur " + txt_fra.getText() + " — " + txt_til.getText();
          String alg = "";
@@ -326,6 +354,7 @@ import java.util.List;
                  source = graph.getNodes().get(Integer.parseInt(txt_fra.getText()));
                 destination = graph.getNodes().get(Integer.parseInt(txt_til.getText()));
                 graph.dijkstra(source, destination);
+                draw_algorithm(tur, alg, tid1, destination);
                  //Dijkstra.calculateShortestPathFromSource(graph.getSourceNode(), graph.getDestinationNode(), graph.getNumberOfNodes(), graph.getNodes());
                  //noder = graph.getDestinationNode().getShortestPath().size();
                  alg = "Dijkstras algoritme ";
@@ -337,41 +366,70 @@ import java.util.List;
                     source = graph.getNodes().get(Integer.parseInt(txt_fra.getText()));
                     destination = graph.getNodes().get(Integer.parseInt(txt_til.getText()));
                     graph.alt(source, destination);
+                    draw_algorithm(tur, alg, tid1, destination);;
                     //ALT.calculateShortestPathFromSource(graph.getSourceNode(), graph.getDestinationNode(), graph.getNumberOfNodes(), graph.getNodes());
                     //noder = graph.getDestinationNode().getShortestPath().size();
                  alg = "ALT-algoritmen ";
                  break;
+            case "find_closest":
+                graph.setSourceNode(graph.getNodes().get(Integer.parseInt(txt_fra.getText())));
+                String selectedType = (String) interestPointDropdown.getSelectedItem();
+                int interestPointCode = Integer.parseInt(selectedType.split(" - ")[0]);
+                Node[] closestInterestPoints = graph.find_closest_interestpoints(graph.getSourceNode(), interestPointCode, graph.getNodes());
+                System.out.println("Number of interestpoints: " + closestInterestPoints.length);
+        
+                alg = "Finner 4 nærmeste interessepunkter: ";
+                Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW};
+                for (int i = 0; i < closestInterestPoints.length; i++) {
+                    System.out.println("Drawing interest points");
+                    destination = closestInterestPoints[i];
+                    System.out.println("Destination node: " + destination.getName() + ", iteration: " + i);
+                    System.out.println("Color: " + colors[i]);
+                    // Set the color for each route
+                    tegn_ruta(colors[i]);
+                }
+                break;
              default:
                  System.exit(0);
                  break;
+                
          }
-         Date tid2 = new Date();
-         map().removeAllMapMarkers();
+         graph.reset();
+        }
+            
+         
  
  /*
      Vise frem kjøretid for bilen, hvis målet ble funnet:
  */
-         if (destination.getData() == null) {
-             tur += "  Fant ikke veien!";
-         } else {
-             int tid = destination.getTime();
-             int tt = tid / 360000; tid -= 360000 * tt;
-             int mm = tid / 6000; tid -= 6000 * mm;
-             int ss = tid / 100;
-             int hs = tid % 100;
-             tur = String.format("%s Kjøretid %d:%02d:%02d,%02d   ()", tur, tt, mm, ss, hs);
-             tegn_ruta();
-         }
-         float sek = (float)(tid2.getTime() - tid1.getTime()) / 1000;
-         alg = String.format("%s prosesserte %,d noder på %2.3fs. %2.0f noder/ms", alg, noder, sek, noder/sek/1000);
-         lbl_tur.setText(tur);
-         lbl_alg.setText(alg);
-         System.out.println(tur);
-         System.out.println(alg);
-         System.out.println();
-         /* graph = new Graph();
-         graph.init_graph(nodeList, edgeList, interestPoints); */
-         graph.reset();
+
+         
+     
+
+     private void draw_algorithm(String tur, String alg, Date tid1, Node node) {
+            Date tid2 = new Date();
+         
+            if (node.getData() == null) {
+                tur += "  Fant ikke veien!";
+            } else {
+                int tid = node.getTime();
+                int tt = tid / 360000; tid -= 360000 * tt;
+                int mm = tid / 6000; tid -= 6000 * mm;
+                int ss = tid / 100;
+                int hs = tid % 100;
+                tur = String.format("%s Kjøretid %d:%02d:%02d,%02d   ()", tur, tt, mm, ss, hs);
+                tegn_ruta(Color.YELLOW);
+            }
+            float sek = (float)(tid2.getTime() - tid1.getTime()) / 1000;
+            alg = String.format("%s prosesserte %,d noder på %2.3fs. %2.0f noder/ms", alg, noder, sek, noder/sek/1000);
+            lbl_tur.setText(tur);
+            lbl_alg.setText(alg);
+            System.out.println(tur);
+            System.out.println(alg);
+            System.out.println();
+            /* graph = new Graph();
+            graph.init_graph(nodeList, edgeList, interestPoints); */
+        
      }
  
      //Skriving i tekstfelt

@@ -80,6 +80,7 @@ import java.util.List;
      private final JLabel mperpLabelValue;
  
      Graph graph;
+     Node source, destination;
      Layer rutelag, areallag;
      int noder = 0;
  
@@ -87,7 +88,7 @@ import java.util.List;
      For å plotte punkter:
      Layer rutelag = treeMap.addLayer("Kjørerute"); 
      MapMarkerDot navnx = new MapMarkerDot(rutelag, "navn", breddegrad, lengdegrad);
-     //navn er optional: new MapMarkerDot(layer, breddegrad, lengdegrad);
+     //navn er optional: new MapMarkerDot(layer, breddegrad, lengdegrad);∏∏
    map().addMapMarker(navnx);
  
      map().removeMapMarker(navnx); //Fjerne et punkt, hvis man gidder...
@@ -97,6 +98,7 @@ import java.util.List;
      public vindu(Graph parameterG) {
          super(new GridBagLayout());
          graph = parameterG;
+         
          GridBagConstraints c = new GridBagConstraints();
          GridBagConstraints hc =  new GridBagConstraints(); //høyrejustert
          GridBagConstraints vc =  new GridBagConstraints(); //venstrejustert
@@ -286,7 +288,7 @@ import java.util.List;
          fungerer med MapMarkerDot:
  */     
 
-        Node node = graph.getDestinationNode();
+        Node node = destination;//graph.getDestinationNode();
         noder = 0;
         while (node != null) {
             MapMarkerDot prikk;
@@ -317,18 +319,24 @@ import java.util.List;
          switch (e.getActionCommand()) {
              case "dijkstra":
                  /* sett inn et kall for å kjøre Dijkstras algoritme her */
-                 graph.setSourceNode(graph.getNodes().get(Integer.parseInt(txt_fra.getText())));
+                 /* graph.setSourceNode(graph.getNodes().get(Integer.parseInt(txt_fra.getText())));
                  graph.setDestinationNode(graph.getNodes().get(Integer.parseInt(txt_til.getText())));
-                 graph.dijkstra(graph.getSourceNode(), graph.getDestinationNode());
+                 graph.dijkstra(graph.getSourceNode(), graph.getDestinationNode()); */
+
+                 source = graph.getNodes().get(Integer.parseInt(txt_fra.getText()));
+                destination = graph.getNodes().get(Integer.parseInt(txt_til.getText()));
+                graph.dijkstra(source, destination);
                  //Dijkstra.calculateShortestPathFromSource(graph.getSourceNode(), graph.getDestinationNode(), graph.getNumberOfNodes(), graph.getNodes());
                  //noder = graph.getDestinationNode().getShortestPath().size();
                  alg = "Dijkstras algoritme ";
                  break;
              case "alt":
                  /* sett inn kall for å kjøre ALT her */
-                    graph.setSourceNode(graph.getNodes().get(Integer.parseInt(txt_fra.getText())));
-                    graph.setDestinationNode(graph.getNodes().get(Integer.parseInt(txt_til.getText())));
-                    graph.alt(graph.getSourceNode(), graph.getDestinationNode());
+                    //graph.setSourceNode(graph.getNodes().get(Integer.parseInt(txt_fra.getText())));
+                    //graph.setDestinationNode(graph.getNodes().get(Integer.parseInt(txt_til.getText())));
+                    source = graph.getNodes().get(Integer.parseInt(txt_fra.getText()));
+                    destination = graph.getNodes().get(Integer.parseInt(txt_til.getText()));
+                    graph.alt(source, destination);
                     //ALT.calculateShortestPathFromSource(graph.getSourceNode(), graph.getDestinationNode(), graph.getNumberOfNodes(), graph.getNodes());
                     //noder = graph.getDestinationNode().getShortestPath().size();
                  alg = "ALT-algoritmen ";
@@ -343,10 +351,10 @@ import java.util.List;
  /*
      Vise frem kjøretid for bilen, hvis målet ble funnet:
  */
-         if (graph.getDestinationNode().getData() == null) {
+         if (destination.getData() == null) {
              tur += "  Fant ikke veien!";
          } else {
-             int tid = graph.getDestinationNode().getTime();
+             int tid = destination.getTime();
              int tt = tid / 360000; tid -= 360000 * tt;
              int mm = tid / 6000; tid -= 6000 * mm;
              int ss = tid / 100;
@@ -361,7 +369,9 @@ import java.util.List;
          System.out.println(tur);
          System.out.println(alg);
          System.out.println();
- 
+         /* graph = new Graph();
+         graph.init_graph(nodeList, edgeList, interestPoints); */
+         graph.reset();
      }
  
      //Skriving i tekstfelt
@@ -443,11 +453,12 @@ import java.util.List;
  //Java Navi
  public class Navi {
  
-     public static void gui(Graph G) {
+     public static void gui(Graph graph) {
+        
          JFrame frame = new JFrame("Kartnavigasjon");
  
          //Innhold
-         frame.add(new vindu(G));
+         frame.add(new vindu(graph));
  
          //Vis vinduet
          frame.pack();
@@ -458,12 +469,14 @@ import java.util.List;
          //Les inn kart, og
          //opprett grafen
      Graph graph = new Graph();
+     List<double[]> nodeList = graph.read_from_file("noder.txt");
+     List<double[]> edgeList = graph.read_from_file("kanter.txt");
+     Map<Integer, InterestPoint> interestPoints = graph.readInterestPoints("interessepkt.txt");
+     graph.init_graph(nodeList, edgeList, interestPoints);
+
      
         //Les inn noder og kanter fra fil
-        List<double[]> nodeList = graph.read_from_file("island/noder.txt");
-        List<double[]> edgeList = graph.read_from_file("island/kanter.txt");
-        Map<Integer, InterestPoint> interestPoints = graph.readInterestPoints("island/interessepkt.txt");
-        graph.init_graph(nodeList, edgeList, interestPoints);
+        
  
          //...
  

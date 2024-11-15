@@ -57,7 +57,7 @@ public class ALT{
     }
 
     private static PriorityQueue<Node> makePriorityQueue(HashMap<Integer, Node> nodes, Node source, Node destination){
-        PriorityQueue<Node> priorityQueue = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getData().get_fullDepth()));
+        PriorityQueue<Node> priorityQueue = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getData().get_ditance_to_end()));
         source.setDistance(0);
         source.setTime(0);
         priorityQueue.add(source);

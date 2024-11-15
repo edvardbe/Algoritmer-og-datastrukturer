@@ -4,6 +4,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -23,8 +24,8 @@ public class Graph {
     
 
     public void dijkstra(Node source, Node destination){
-        pq = new PriorityQueue<>((a, b) -> a.getData().get_depth() - b.getData().get_depth());
-        ((Pre) source.getData()).depth = 0;
+        pq = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getData().get_time()));
+        ((Pre) source.getData()).time = 0;
         pq.add((Node) source);
         while (!pq.isEmpty()){
             Node n = pq.poll();
@@ -38,8 +39,8 @@ public class Graph {
     }
 
     public void alt(Node source, Node destination){
-        pq = new PriorityQueue<>((a, b) -> a.getData().get_fullDepth() - b.getData().get_fullDepth());
-        ((Pre) source.getData()).depth = 0;
+        pq = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getData().get_full_time()));
+        ((Pre) source.getData()).time = 0;
         pq.add((Node) source);
         while (!pq.isEmpty()){
             Node n = pq.poll();
@@ -55,25 +56,24 @@ public class Graph {
 
     public void shorten_dijk(Node node, Edge edge, PriorityQueue<Node> pq){
         Pre pre = node.getData(), edgeEnd = edge.getTo().getData();
-        if (pre.get_depth() + edge.getDistance() < edgeEnd.get_depth()){
-            edgeEnd.depth = pre.get_depth() + edge.getDistance();
+        if (pre.get_time() + edge.getDriveTime() < edgeEnd.get_time()){
+            edgeEnd.time = pre.get_time() + edge.getDriveTime();
             edgeEnd.pre = node;
             edge.getTo().setTime(node.getTime() + edge.getDriveTime());
-
             pq.add(edge.getTo());
         }
     }
 
     public void shorten_alt(Node node, Edge edge, PriorityQueue<Node> pq, Node destination){
         Pre pre = node.getData(), edgeEnd = edge.getTo().getData();
-        if (pre.get_depth() + edge.getDistance() < edgeEnd.get_depth()){
-            if(edgeEnd.distanceToEnd == -1){
-                edgeEnd.distanceToEnd = (int) Math.round(euclideanDistance(edge.getTo(), destination));
+        if (pre.get_time() + edge.getDriveTime() < edgeEnd.get_time()){
+            if(edgeEnd.time_to_end == -1){
+                edgeEnd.time_to_end = (int) Math.round(euclideanDistance(edge.getTo(), destination));
             }
-            edgeEnd.depth = pre.get_depth() + edge.getDistance();
+            edgeEnd.time = pre.get_time() + edge.getDistance();
             edgeEnd.pre = node;
             edge.getTo().setTime(node.getTime() + edge.getDriveTime());
-            edgeEnd.fullDepth = edgeEnd.depth + edgeEnd.distanceToEnd;
+            edgeEnd.full_time = edgeEnd.time + edgeEnd.time_to_end;
             pq.add(edge.getTo());
         }
     }
@@ -247,66 +247,97 @@ public class Graph {
         return interestPoints;
     }
 
+    public void reset(){
+        for (Node n : nodes.values()){
+            n.setData(new Pre());
+            n.setTime(0);
+        }
+    }
+
     public static void main(String[] args) {
         Graph graph = new Graph();
 
-        List<double[]> nodeList = graph.read_from_file("test-noder.txt");
-        List<double[]> edgeList = graph.read_from_file("test-kanter.txt");
-        Map<Integer, InterestPoint> interestPoints = graph.readInterestPoints("test-interessepkt.txt");
-        graph.init_graph(nodeList, edgeList, interestPoints);
+        List<double[]> nodeList = graph.read_from_file("island/noder.txt");
+        List<double[]> edgeList = graph.read_from_file("island/kanter.txt");
+        Map<Integer, InterestPoint> interestPoints = graph.readInterestPoints("island/interessepkt.txt");
 
         System.out.println("Graph initialized");
-        System.out.println("Total nodes: " + graph.getNodes().size());
-        graph.print_graph();
         System.out.println("\n ------------- \n");
         Node source;
         Node destination;
         java.util.Scanner scanner = new java.util.Scanner(System.in);
         while (true) {
+            graph = new Graph();
+            graph.init_graph(nodeList, edgeList, interestPoints);
             System.out.println("\n ------------- \n");
-            System.out.println("Press p to print graph, x to exit,");
+            System.out.println("Press 'x' to exit,");
             System.out.println("Select source node: ");
             try {
                 String input = scanner.nextLine();
                 if (input.equals("x")) {
                     break;
                 }
-                else if (input.equals("p")) {
-                    graph.print_graph();
-                    continue;
-                }
+                
                 source = graph.getNodes().get(Integer.parseInt(input));
                 graph.setSourceNode(source);
                 System.out.println("Source Node: " + source.getName());
             } catch (Exception e) {
                 System.out.println("Invalid input");
+                e.printStackTrace();
                 continue;
             }
 
             try {
                 System.out.println("\n ------------- \n");
-                System.out.println("Press x to exit");
                 System.out.println("Select destination node: ");
                 String input = scanner.nextLine();
+                destination = graph.getNodes().get(Integer.parseInt(input));
+                System.out.println("Press 'd' or 'a', x to exit");
+                input = scanner.nextLine();
                 if (input.equals("x")) {
                     break;
+                } else if (!input.equals("d") && !input.equals("a")) {
+                    System.out.println("Invalid input");
+                    continue;
                 }
-                destination = graph.getNodes().get(Integer.parseInt(input));
+                Date tid1 = new Date();
                 graph.setDestinationNode(destination);
-                graph.alt(source, destination);
+                String tur = "Kjøretur " + source.getName() + " — " + destination.getName() + ": ";
+                String alg = "Algoritme: ";
+                if (input.equals("d")) {
+                    graph.dijkstra(source, destination);
+                    alg = alg + "Dijkstra. ";                  
+                } else if (input.equals("a")) {
+                    graph.alt(source, destination);
+                    alg = alg + "ALT. ";                  
+                }
+                Date tid2 = new Date();
                 System.out.println("Destination Node: " + destination.getName());
                 int count = 0;
                 System.out.println("Shortest path: ");
                 Node node = destination;
                 while (node != null) {
-                    System.out.print(" ->  " + node.getName());
-                    node = (Node) ((Pre) node.getData()).get_pre();
+/*                     System.out.print(" ->  " + node.getName());
+ */                    node = (Node) ((Pre) node.getData()).get_pre();
                     count++;
                 }
                 System.out.println();
-                if (count == 1) {
+                if (graph.getDestinationNode().getData() == null || count == 1) {
                     System.out.println("No path found");
+                } else {
+                    int tid = graph.getDestinationNode().getTime();
+                    int tt = tid / 360000; tid -= 360000 * tt;
+                    int mm = tid / 6000; tid -= 6000 * mm;
+                    int ss = tid / 100;
+                    int hs = tid % 100;
+                    tur = String.format("%s Kjøretid %d:%02d:%02d,%02d   ()", tur, tt, mm, ss, hs);
                 }
+                float sek = (float)(tid2.getTime() - tid1.getTime()) / 1000;
+                alg = String.format("%s prosesserte %,d noder på %2.3fs. %2.0f noder/ms", alg, count, sek, count/sek/1000);
+                System.out.println(tur);
+                System.out.println(alg);
+                System.out.println();
+                
             } catch (Exception e) {
                 System.out.println("Invalid input");
                 e.printStackTrace();

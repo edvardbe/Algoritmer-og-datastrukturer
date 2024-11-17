@@ -7,7 +7,7 @@ public class Node {
 
     private Pre data;
 
-    private int name;
+    private int id;
 
     private int time = 0;
     
@@ -22,12 +22,12 @@ public class Node {
     private boolean isInterestPoint = false;
     
      
-    public Node(int name) {
-        this.name = name;
+    public Node(int id) {
+        this.id = id;
     }
 
-    public Node(int name, double latitude, double longitude) {
-        this.name = name;
+    public Node(int id, double latitude, double longitude) {
+        this.id = id;
         this.vector = new Vector(latitude, longitude);
         this.data = new Pre();
     }
@@ -49,8 +49,8 @@ public class Node {
         this.distance = distance;
     }
 
-    public int getName(){
-        return this.name;
+    public int getId(){
+        return this.id;
     }
     public List<Node> getShortestPath(){
         return this.shortestPath;
@@ -64,8 +64,8 @@ public class Node {
         this.data = data;
     }
 
-    public void setName(int name){
-        this.name = name;
+    public void setId(int id){
+        this.id = id;
     }
     public void setShortestPath(List<Node> shortestPath){
         this.shortestPath = shortestPath;
@@ -101,6 +101,6 @@ public class Node {
 
     @Override
     public String toString() {
-        return name + "(" + vector.getLatitude() + ", " + vector.getLongitude() + ")";
+        return id + "(" + vector.getLatitude() + ", " + vector.getLongitude() + ")";
     }
 }

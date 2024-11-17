@@ -11,7 +11,7 @@ public class InterestPoint extends Node {
     }
 
     public InterestPoint(Node node, int type, String description) {
-        super(node.getName(), node.getVector().getLatitude(), node.getVector().getLongitude());
+        super(node.getId(), node.getVector().getLatitude(), node.getVector().getLongitude());
         this.type = type;
         this.description = description;
     }
@@ -39,6 +39,6 @@ public class InterestPoint extends Node {
 
     @Override
     public String toString() {
-        return "name: " + this.getName() + ", type: " + this.type + ", description: " + this.description;
+        return "name: " + this.getId() + ", type: " + this.type + ", description: " + this.description;
     }
 }

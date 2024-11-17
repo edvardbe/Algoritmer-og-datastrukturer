@@ -350,8 +350,8 @@ import java.util.List;
                  graph.setDestinationNode(graph.getNodes().get(Integer.parseInt(txt_til.getText())));
                  graph.dijkstra(graph.getSourceNode(), graph.getDestinationNode()); */
 
-                 source = graph.getNodes().get(Integer.parseInt(txt_fra.getText()));
-                destination = graph.getNodes().get(Integer.parseInt(txt_til.getText()));
+                 source = graph.getNodes()[Integer.parseInt(txt_fra.getText())];
+                destination = graph.getNodes()[Integer.parseInt(txt_til.getText())];
                 graph.dijkstra(source, destination);
                 alg = "Dijkstras algoritme ";
                 draw_algorithm(tur, alg, tid1, destination);
@@ -362,8 +362,8 @@ import java.util.List;
                  /* sett inn kall for å kjøre ALT her */
                     //graph.setSourceNode(graph.getNodes().get(Integer.parseInt(txt_fra.getText())));
                     //graph.setDestinationNode(graph.getNodes().get(Integer.parseInt(txt_til.getText())));
-                    source = graph.getNodes().get(Integer.parseInt(txt_fra.getText()));
-                    destination = graph.getNodes().get(Integer.parseInt(txt_til.getText()));
+                    source = graph.getNodes()[Integer.parseInt(txt_fra.getText())];
+                    destination = graph.getNodes()[Integer.parseInt(txt_til.getText())];
                     graph.alt(source, destination);
                     alg = "ALT-algoritmen ";
                     draw_algorithm(tur, alg, tid1, destination);;
@@ -371,7 +371,7 @@ import java.util.List;
                     //noder = graph.getDestinationNode().getShortestPath().size();
                  break;
             case "find_closest":
-                graph.setSourceNode(graph.getNodes().get(Integer.parseInt(txt_fra.getText())));
+                graph.setSourceNode(graph.getNodes()[Integer.parseInt(txt_fra.getText())]);
                 String selectedType = (String) interestPointDropdown.getSelectedItem();
                 int interestPointCode = Integer.parseInt(selectedType.split(" - ")[0]);
                 Node[] closestInterestPoints = graph.find_closest_interestpoints(graph.getSourceNode(), interestPointCode, graph.getNodes());

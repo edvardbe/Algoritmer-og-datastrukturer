@@ -16,26 +16,25 @@ public class Tester {
         Node destination;
         java.util.Scanner scanner = new java.util.Scanner(System.in);
         graph = new Graph();
-        graph.init_graph(nodeList, edgeList, interestPoints);
+        int[] landmarkIds = new int[]{1432, 50010, 109221};
+        graph.init_graph(nodeList, edgeList, interestPoints, landmarkIds);
         while (true) {
             graph.reset();
             System.out.println("\n ------------- \n");
-            System.out.println("Press 'x' to exit, 'm' to make landmark files, 'i' to init landmarks");
+            System.out.println("Press 'x' to exit, 'm' to make landmark files, 'i' to init graph");
             System.out.println("Select source node: ");
             try {
                 String input = scanner.nextLine();
                 if (input.equals("x")) {
                     break;
                 } else if(input.equals("i")) {
-                    graph.init_landmarks("fra-landemerker.txt", true);
-                    graph.init_landmarks("til-landemerker.txt", false);
+                    graph.init_graph(nodeList, edgeList, interestPoints, landmarkIds);
                     continue;
 
                 } else if(input.equals("m")) {
-                    graph.make_landmarks(new int[]{1432, 50010, 109221}, "fra-landemerker.txt");
-                    Graph inverse = graph;
-                    inverse.inverse_graph();
-                    inverse.make_landmarks(new int[]{1432, 50010, 109221}, "til-landemerker.txt");
+                    graph.make_landmarks(graph.getLandmarkIds(), "fra-landemerker.txt");
+                    graph.readInverseEdges("island/kanter.txt");
+                    graph.make_landmarks(graph.getLandmarkIds(), "til-landemerker.txt");
                     /* graph.make_landmarks(new int[]{478452, 2531818, 1361309, 5542364}, "fra-landemerker.txt");
                     Graph inverse = graph;
                     inverse.inverse_graph();
@@ -95,7 +94,7 @@ public class Tester {
                 String tur = "Kjøretur " + source.getId() + " — " + destination.getId() + ": ";
                 String alg = "Algoritme: ";
                 if (input.equals("d")) {
-                    graph.dijkstra(source, destination);
+                    graph.dijkstra(source.getId(), destination.getId());
                     alg = alg + "Dijkstra. ";                  
                 } else if (input.equals("a")) {
                     graph.alt(source, destination);
@@ -108,14 +107,14 @@ public class Tester {
                 Node node = destination;
                 while (node != null) {
 /*                     System.out.print(" ->  " + node.getId());
- */                    node = (Node) node.getData().get_pre();
+ */                    node =  node.getFrom();
                     count++;
                 }
                 System.out.println();
-                if (graph.getDestinationNode().getData() == null || count == 1) {
+                if (graph.getDestinationNode().getFrom() == null || count == 1) {
                     System.out.println("No path found");
                 } else {
-                    int tid = graph.getDestinationNode().getData().get_time();
+                    int tid = graph.getDestinationNode().getTime();
                     System.out.println("Time: " + tid);
                     int tt = tid / 360000; tid -= 360000 * tt;
                     int mm = tid / 6000; tid -= 6000 * mm;

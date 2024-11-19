@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.openstreetmap.gui.jmapviewer.JMapViewer;
 import org.openstreetmap.gui.jmapviewer.Layer;
@@ -32,79 +34,78 @@ public class Graph {
     private Node[] nodes;
         
         public Graph(){};
+
+        public Graph(int numberOfNodes){
+            this.numberOfNodes = numberOfNodes;
+            this.nodes = new Node[numberOfNodes];
+        };
+
     
     
-        public void dijkstra(Node source, Node destination){
+        public void dijkstra(int sourceId, int destinationId){
+            Node source = nodes[sourceId];
             this.numberOfProcessed = 0;
             pq = create_dijkstra_queue();
-            source.getData().time = 0;
-            source.getData().distance = 0;
+            source.setTime(0);
+            source.setDistance(0);
             pq.add(source);
             while (!pq.isEmpty()){
                 Node n = pq.poll();
+                /* MapMarkerDot marker = new MapMarkerDot(layer, grad(n.getVector().getLatitude()), grad(n.getVector().getLongitude()));
+                marker.getStyle().setBackColor(Color.RED);
+                map.addMapMarker(marker); */
                 numberOfProcessed++;
-                if (n.equals(destination)){
+                if (n.getId() == destinationId){
                     break;
                 }
                 for (Edge e = n.getEdge(); e != null; e = e.getNext()){
-                    shorten_dijk(n, e, pq);
+                    if(!n.getVisited()){
+                        shorten_dijk(n, e, pq);
+                    }
                 }
             }
         }
-    
-        private void dijkstra_all_nodes(Node source){
-            this.numberOfProcessed = 0;
-            pq = create_dijkstra_queue();
-            source.getData().time = 0;
-            source.getData().distance = 0;
-
-            pq.add(source);
-            while (!pq.isEmpty()){
-                Node n = pq.poll();
-                numberOfProcessed++;
-                for (Edge e = n.getEdge(); e != null; e = e.getNext()){
-                    shorten_dijk(n, e, pq);
-                }
-            }
-        }
-        public double grad(double rad) {
-            return rad / Math.PI * 180;
-        }
-        
     
         public void alt(Node source, Node destination){
             Set<Node> visitedNodes = new HashSet<>();
+            System.out.println(from_landmarks.get(0)[0] + " " + from_landmarks.get(0)[1] + " " + from_landmarks.get(0)[2]);
             this.numberOfProcessed = 0;
             pq = create_alt_queue(source.getId(), destination.getId(), numberOfLandmarks);
             
-            source.getData().time = 0;
-            source.getData().full_time = 0;
+            source.setTime(0);
+            source.setDistance(0);
+            /* source.getData().full_time = 0;
             source.getData().time_to_end = calculateALTHeuristic(source.getId(), destination.getId());
-            source.getData().distance = 0;
+            source.getData().distance = 0; */
             pq.add(source);
             while (!pq.isEmpty()){
                 numberOfProcessed++;
-                Node n = pq.poll();
-                if (n.getId() == destination.getId()){
+                Node node = pq.poll();
+                /* MapMarkerDot marker = new MapMarkerDot(layer, grad(n.getVector().getLatitude()), grad(n.getVector().getLongitude()));
+                marker.getStyle().setBackColor(Color.RED);
+                map.addMapMarker(marker); */
+                visitedNodes.add(node);
+                if (node.getId() == destination.getId()){
                     break;
                 }
-                visitedNodes.add(n);
                 
-                for (Edge e = n.getEdge(); e != null; e = e.getNext()){
-                    if(e.getTo().getData().visited){
-                        e.getTo().getData().time_to_end = calculateALTHeuristic(e.getTo().getId(), destination.getId());
+                for (Edge edge = node.getEdge(); edge != null; edge = edge.getNext()){
+                    if(!pq.contains(edge.getTo()) && !visitedNodes.contains(edge.getTo())){
+                        edge.getTo().setTimeToEnd(estimate(edge.getTo().getId(), destination.getId()));//calculateALTHeuristic(e.getTo().getId(), destination.getId());
+                        pq.add(edge.getTo());
                     }
-                    shorten_alt(n, e, pq, destination);
+                    
+                    shorten_alt(node, edge, pq);
                 }
             }
         }
     
         private PriorityQueue<Node> create_dijkstra_queue(){
-            return new PriorityQueue<>(Comparator.comparingDouble(node -> node.getData().get_time()));
+            return new PriorityQueue<>(Comparator.comparingDouble(node -> node.getTime()));
         }
         
         private PriorityQueue<Node> create_alt_queue(int sourceId, int destinationId, int numberOfLandmarks) {
-            return new PriorityQueue<>((a, b) -> a.getData().get_full_time() - b.getData().get_full_time());
+            return new PriorityQueue<>((a, b) -> a.getFullTime() - b.getFullTime());
         }
         private int calculateALTHeuristic(int sourceId, int destinationId) {
             int max = 0;
@@ -124,6 +125,35 @@ public class Graph {
             }
             // Use triangular difference
             return max;
+        }
+
+        public int estimate(int currentNode, int endNode) {
+            int currentBest = 0;
+            for(int i = 0; i < 3; i++) {
+                
+    
+                int var1 = from_landmarks.get(endNode)[i];
+                int var2 = from_landmarks.get(currentNode)[i];
+                int var3 = var1 - var2;
+                if(var3 < 0) {
+                    var3 = 0;
+                }
+    
+                int var4 = to_landmarks.get(currentNode)[i];
+                int var5 = to_landmarks.get(endNode)[i];;
+                int var6 = var4 - var5;
+    
+                int tempBest = 0;
+                if(var3 > var6) {
+                    tempBest = var3;
+                } else {
+                    tempBest = var6;
+                }
+                if(tempBest > currentBest) {
+                    currentBest = tempBest;
+                }
+            }
+            return currentBest;
         }
 
 
@@ -162,7 +192,7 @@ public class Graph {
         
     
         public InterestPoint[] find_closest_interestpoints(Node source, int interest_point_code, Node[] nodes){
-            pq = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getData().get_time()));
+            pq = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getTime()));
             InterestPoint[] closestInterestPoints = new InterestPoint[4];
             Set<Node> visitedNodes = new HashSet<>();
             int count = 0;
@@ -172,7 +202,7 @@ public class Graph {
             // Initialize distances
             /* sourceNode.setDistance(0);
             sourceNode.setTime(0); */
-            sourceNode.getData().time = 0;
+            sourceNode.getFrom().setTime(0);
     
             pq.add(sourceNode);
             while (!pq.isEmpty() && count < 4) {
@@ -198,33 +228,61 @@ public class Graph {
         }
     
     
-        public void shorten_dijk(Node node, Edge edge, PriorityQueue<Node> pq){
+        /* public void shorten_dijk(Node node, Edge edge, PriorityQueue<Node> pq){
             Pre pre = node.getData(), edgeEnd = edge.getTo().getData();
+            edgeEnd.visited = true;
             int new_time = pre.get_time() + edge.getDriveTime();
             int new_distance = pre.get_distance() + edge.getDistance();
             if (new_time < edgeEnd.get_time()){
                 edgeEnd.time = new_time;
                 edgeEnd.distance = new_distance;
                 edgeEnd.pre = node;
-                /* edge.getTo().setDistance(node.getDistance() + edge.getDistance());
-                edge.getTo().setTime(node.getTime() + edge.getDriveTime()); */
+                //edge.getTo().setDistance(node.getDistance() + edge.getDistance());
+                //edge.getTo().setTime(node.getTime() + edge.getDriveTime()); 
+                pq.remove(edge.getTo());
+                pq.add(edge.getTo());
+            }
+        } */
+
+        public void shorten_dijk(Node edgeStart, Edge edge, PriorityQueue<Node> pq){
+            Node edgeEnd = edge.getTo();
+            int new_time = edgeStart.getTime() + edge.getDriveTime();
+            int new_distance = edgeStart.getDistance() + edge.getDistance();
+            if (new_time < edgeEnd.getTime()){
+                edgeEnd.setTime(new_time);
+                edgeEnd.setDistance(new_distance);
+                edgeEnd.setFrom(edgeStart);
                 pq.remove(edge.getTo());
                 pq.add(edge.getTo());
             }
         }
     
-        public void shorten_alt(Node node, Edge edge, PriorityQueue<Node> pq, Node destination){
+        /* public void shorten_alt(Node node, Edge edge, PriorityQueue<Node> pq, Node destination){
             Pre pre = node.getData(), edgeEnd = edge.getTo().getData();
-            edgeEnd.visited = true;
-            int new_time = pre.get_time() + edge.getDriveTime();
+            int new_time = pre.time + edge.getDriveTime();
             int new_distance = pre.get_distance() + edge.getDistance();
-            if (new_time < edgeEnd.get_time()){
+            if (new_time < edgeEnd.time){
                 pq.remove(edge.getTo());
                 edgeEnd.time = new_time;
                 edgeEnd.distance = new_distance;
                 edgeEnd.pre = node;
                 edgeEnd.full_time = edgeEnd.time + edgeEnd.time_to_end;
                 pq.add(edge.getTo());
+            }
+        } */
+
+        public void shorten_alt(Node node, Edge edge, PriorityQueue<Node> pq){
+            Node edgeEnd = edge.getTo();
+            int new_time = node.getTime() + edge.getDriveTime();
+            int new_distance = node.getDistance() + edge.getDistance();
+            if (new_time < edgeEnd.getTime()){
+                edgeEnd.setTime(new_time);
+                edgeEnd.setDistance(new_distance);
+                edgeEnd.setFrom(node);
+                edgeEnd.setFullTime(edgeEnd.getTime() + edgeEnd.getTimeToEnd());
+                pq.remove(edge.getTo());
+                pq.add(edge.getTo());
+                edgeEnd.setVisited(true);
             }
         }
     
@@ -239,8 +297,8 @@ public class Graph {
          * and the array of nodes, nodes.
          * @param path
          */
-        public void init_graph(List<double[]> nodeList, List<double[]> edgeList, Map<Integer, InterestPoint> interestPoints){
-        
+        public void init_graph(List<double[]> nodeList, List<double[]> edgeList, Map<Integer, InterestPoint> interestPoints, int[] landmarkIds){
+            this.landmarkIds = landmarkIds;
             this.numberOfNodes = (int) nodeList.get(0)[0];
             this.numberOfEdges = (int) edgeList.get(0)[0];
             this.nodes = new Node[numberOfNodes];
@@ -272,8 +330,29 @@ public class Graph {
             init_landmarks("fra-landemerker.txt", true);
             init_landmarks("til-landemerker.txt", false);
         }
+
+        public void readInverseEdges(String path) throws Exception {
+            BufferedReader reader = new BufferedReader(new FileReader(path));
+            StringTokenizer tokenizer = new StringTokenizer(reader.readLine());
+            numberOfEdges = Integer.parseInt(tokenizer.nextToken());
+            for (int i = 0; i < numberOfEdges; i++) {
+                tokenizer = new StringTokenizer(reader.readLine());
+                int from = Integer.parseInt(tokenizer.nextToken());
+                int to = Integer.parseInt(tokenizer.nextToken());
+                
+                int time = Integer.parseInt(tokenizer.nextToken());
+                int distance = Integer.parseInt(tokenizer.nextToken());
+                int speedLimit = Integer.parseInt(tokenizer.nextToken());
+                Node toNode = nodes[to];
+                Node fromNode = nodes[from];
+                if (toNode != null) {
+                    Edge newEdge = new Edge(fromNode, toNode.getEdge(), time, distance, speedLimit);
+                    toNode.setEdge(newEdge);
+                }
+            }
+        }
     
-        public void inverse_graph() {
+        /* public void inverse_graph() {
             // Create an array to temporarily store the reversed edges
             List<Edge>[] reversedEdges = new ArrayList[numberOfNodes];
             for (int i = 0; i < numberOfNodes; i++) {
@@ -306,7 +385,7 @@ public class Graph {
                 }
             }
         }
-        
+         */
     
         public void print_graph(){
             for (Node node : nodes) {
@@ -427,10 +506,6 @@ public class Graph {
                         parsedLine[i] = Integer.parseInt(filteredTokens.get(i));
                     }
                     list.add(parsedLine);
-                    if(count == 0){
-                        this.landmarkIds = parsedLine;
-                        this.numberOfLandmarks = parsedLine.length;
-                    }
                     count++;
                 }
                 b.close();
@@ -486,22 +561,22 @@ public class Graph {
         try {
             FileOutputStream fraOut = new FileOutputStream(path);
             for (int id : landmarkIds){
-                dijkstra_all_nodes(nodes[id]);
+                dijkstra(id, -1);
                 int[] landmark_times = new int[nodes.length];
                 for (int i = 0; i < nodes.length; i++){
-                    int time = nodes[i].getData().get_time();
+                    int time = nodes[i].getTime();
                     if (i == 0) System.out.println("Time after calculations: " + time);
                     landmark_times[i] = time;
                 }
                 landmark_data.add(landmark_times);
                 reset();
             }
-            String s = "";
+            /* String s = "";
             for (int i = 0; i < numberOfLandmarks; i++){
                 s += landmarkIds[i] + " ";
             }
             s += "\n";
-            fraOut.write(s.getBytes());
+            fraOut.write(s.getBytes()); */
             for (int i = 0; i < nodes.length ; i++){
                 StringBuilder sb = new StringBuilder();
                 for (int j = 0; j < landmark_data.size(); j++){
@@ -522,10 +597,67 @@ public class Graph {
 
     public void reset(){
         for (Node n : nodes){
-            n.setData(new Pre());
-            n.setTime(0);
-            n.setDistance(0);
+            n.setTime(Integer.MAX_VALUE);
+            n.setDistance(Integer.MAX_VALUE);
             n.setVisited(false);
         }
     }
+
+
+    public Graph copy() {
+        Graph newGraph = new Graph(numberOfNodes);
+    
+        // Copy all nodes
+        for (int i = 0; i < this.numberOfNodes; i++) {
+            if (nodes[i] != null) {
+                newGraph.nodes[i] = new Node(nodes[i].getId(), nodes[i].getVector().getLatitude(), nodes[i].getVector().getLongitude());
+            }
+        }
+    
+        // Copy all edges
+        for (int i = 0; i < numberOfNodes; i++) {
+            if (nodes[i] != null) {
+                Edge edge = nodes[i].getEdge();
+                while (edge != null) {
+                    int to = edge.getTo().getId();
+                    int driveTime = edge.getDriveTime();
+                    int distance = edge.getDistance();
+                    int speedLimit = edge.getSpeedLimit();
+    
+                    newGraph.addEdge(i, to, driveTime, distance, speedLimit);
+                    edge = edge.getNext();
+                }
+            }
+        }
+    
+        return newGraph;
+    }
+    public void addEdge(int from, int to, int driveTime, int distance, int speedLimit) {
+        Node fromNode = nodes[from];
+        Node toNode = nodes[to];
+    
+        // Ensure nodes exist
+        if (fromNode == null) {
+            fromNode = new Node(from);
+            nodes[from] = fromNode;
+        }
+        if (toNode == null) {
+            toNode = new Node(to);
+            nodes[to] = toNode;
+        }
+    
+        // Add edge
+        Edge newEdge = new Edge(toNode, fromNode.getEdge(), driveTime, distance, speedLimit);
+        fromNode.setEdge(newEdge);
+    }
+
+    public void setLandmarkIds(int[] landmarkIds) {
+        this.landmarkIds = landmarkIds;
+    }
+
+    public int[] getLandmarkIds() {
+        return this.landmarkIds;
+    }
+    
+    
 }

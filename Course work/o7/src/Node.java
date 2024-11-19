@@ -2,20 +2,26 @@ import java.util.List;
 import java.util.LinkedList;
 
 public class Node {
+    private final static int inf = Integer.MAX_VALUE;
 
     private Vector vector;
 
-    private Pre data;
+    private Node from;
 
     private int id;
 
-    private int time = 0;
+    private int time = inf;
+
+    private int distance = inf;
+
+    private int full_time = inf;
+
+    private int time_to_end = inf;
     
     private List<Node> shortestPath = new LinkedList<>();
     
     private Edge edge;
 
-    private int distance = 0;
 
     private boolean visited = false;
 
@@ -29,7 +35,7 @@ public class Node {
     public Node(int id, double latitude, double longitude) {
         this.id = id;
         this.vector = new Vector(latitude, longitude);
-        this.data = new Pre();
+        this.from = null;
     }
     // getters and setters
 
@@ -56,12 +62,12 @@ public class Node {
         return this.shortestPath;
     }
 
-    public Pre getData(){
-        return this.data;
+    public Node getFrom(){
+        return this.from;
     }
 
-    public void setData(Pre data){
-        this.data = data;
+    public void setFrom(Node from){
+        this.from = from;
     }
 
     public void setId(int id){
@@ -89,6 +95,22 @@ public class Node {
 
     public void setTime(int time){
         this.time = time;
+    }
+
+    public int getFullTime(){
+        return this.full_time;
+    }
+
+    public void setFullTime(int full_time){
+        this.full_time = full_time;
+    }
+
+    public int getTimeToEnd(){
+        return this.time_to_end;
+    }
+
+    public void setTimeToEnd(int time_to_end){
+        this.time_to_end = time_to_end;
     }
 
     public boolean isInterestPoint(){

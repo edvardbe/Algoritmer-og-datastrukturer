@@ -1,16 +1,15 @@
-public class Pre {
+/* public class Pre {
     int time;
     int distance;
     int full_time;
     int time_to_end;
     boolean visited = false;
     Node pre;
-    static int inf = 1_000_000_000;
+    static int inf = Integer.MAX_VALUE;
     public Pre(){
         time = inf;
         distance = inf;
         full_time = inf;
-        time_to_end = inf;
         visited = false;
     }
 
@@ -33,3 +32,4 @@ public class Pre {
     }
     
 }
+ */

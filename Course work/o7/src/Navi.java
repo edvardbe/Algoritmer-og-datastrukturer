@@ -435,7 +435,7 @@ import java.util.List;
             if (node.getData() == null) {
                 tur += "  Fant ikke veien!";
             } else {
-                int tid = node.getTime();
+                int tid = node.getData().get_time();
                 int tt = tid / 360000; tid -= 360000 * tt;
                 int mm = tid / 6000; tid -= 6000 * mm;
                 int ss = tid / 100;
@@ -553,9 +553,9 @@ import java.util.List;
          //Les inn kart, og
          //opprett grafen
      Graph graph = new Graph();
-     List<double[]> nodeList = graph.read_from_file("noder.txt");
-     List<double[]> edgeList = graph.read_from_file("kanter.txt");
-     Map<Integer, InterestPoint> interestPoints = graph.read_interest_points("interessepkt.txt");
+     List<double[]> nodeList = graph.read_from_file("island/noder.txt");
+     List<double[]> edgeList = graph.read_from_file("island/kanter.txt");
+     Map<Integer, InterestPoint> interestPoints = graph.read_interest_points("island/interessepkt.txt");
      graph.init_graph(nodeList, edgeList, interestPoints);
 
      

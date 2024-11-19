@@ -15,21 +15,31 @@ public class Tester {
         Node source;
         Node destination;
         java.util.Scanner scanner = new java.util.Scanner(System.in);
+        graph = new Graph();
+        graph.init_graph(nodeList, edgeList, interestPoints);
         while (true) {
-            graph = new Graph();
-            graph.init_graph(nodeList, edgeList, interestPoints);
+            graph.reset();
             System.out.println("\n ------------- \n");
-            System.out.println("Press 'x' to exit, 'm' to make landmark files");
+            System.out.println("Press 'x' to exit, 'm' to make landmark files, 'i' to init landmarks");
             System.out.println("Select source node: ");
             try {
                 String input = scanner.nextLine();
                 if (input.equals("x")) {
                     break;
+                } else if(input.equals("i")) {
+                    graph.init_landmarks("fra-landemerker.txt", true);
+                    graph.init_landmarks("til-landemerker.txt", false);
+                    continue;
+
                 } else if(input.equals("m")) {
-                    graph.makeLandmarks(new int[]{1432, 50010, 109221}, "fra-landemerker.txt");
+                    graph.make_landmarks(new int[]{1432, 50010, 109221}, "fra-landemerker.txt");
                     Graph inverse = graph;
                     inverse.inverse_graph();
-                    inverse.makeLandmarks(new int[]{1432, 50010, 109221}, "til-landemerker.txt");
+                    inverse.make_landmarks(new int[]{1432, 50010, 109221}, "til-landemerker.txt");
+                    /* graph.make_landmarks(new int[]{478452, 2531818, 1361309, 5542364}, "fra-landemerker.txt");
+                    Graph inverse = graph;
+                    inverse.inverse_graph();
+                    inverse.make_landmarks(new int[]{478452, 2531818, 1361309, 5542364}, "til-landemerker.txt"); */
                     continue;
                 } 
                 source = graph.getNodes()[Integer.parseInt(input)];
@@ -98,7 +108,7 @@ public class Tester {
                 Node node = destination;
                 while (node != null) {
 /*                     System.out.print(" ->  " + node.getId());
- */                    node = (Node) ((Pre) node.getData()).get_pre();
+ */                    node = (Node) node.getData().get_pre();
                     count++;
                 }
                 System.out.println();
@@ -111,10 +121,10 @@ public class Tester {
                     int mm = tid / 6000; tid -= 6000 * mm;
                     int ss = tid / 100;
                     int hs = tid % 100;
-                    tur = String.format("%s Kjøretid %d:%02d:%02d,%02d   (tid: %d)", tur, tt, mm, ss, hs, tid);
+                    tur = String.format("%s Kjøretid %d:%02d:%02d,%02d   (tid: %d) (noder: %d)", tur, tt, mm, ss, hs, tid, count);
                 }
                 float sek = (float)(tid2.getTime() - tid1.getTime()) / 1000;
-                alg = String.format("%s prosesserte %,d noder på %2.3fs. %2.0f noder/ms", alg, count, sek, count/sek/1000);
+                alg = String.format("%s prosesserte %,d noder på %2.3fs. %2.0f noder/ms", alg, graph.getNumberOfProcessed(), sek, graph.getNumberOfProcessed()/sek/1000);
                 System.out.println(tur);
                 System.out.println(alg);
                 System.out.println();

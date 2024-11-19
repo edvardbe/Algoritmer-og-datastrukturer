@@ -92,9 +92,7 @@ public class Graph {
                 for (Edge edge = node.getEdge(); edge != null; edge = edge.getNext()){
                     if(!pq.contains(edge.getTo()) && !visitedNodes.contains(edge.getTo())){
                         edge.getTo().setTimeToEnd(estimate(edge.getTo().getId(), destination.getId()));//calculateALTHeuristic(e.getTo().getId(), destination.getId());
-                        pq.add(edge.getTo());
                     }
-                    
                     shorten_alt(node, edge, pq);
                 }
             }
@@ -597,6 +595,7 @@ public class Graph {
 
     public void reset(){
         for (Node n : nodes){
+            n.setFrom(null);
             n.setTime(Integer.MAX_VALUE);
             n.setDistance(Integer.MAX_VALUE);
             n.setVisited(false);

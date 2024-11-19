@@ -106,14 +106,14 @@ public class Tester {
                 System.out.println("Shortest path: ");
                 Node node = destination;
                 while (node != null) {
-/*                     System.out.print(" ->  " + node.getId());
- */                    node =  node.getFrom();
+                    node = node.getFrom();
                     count++;
                 }
                 System.out.println();
                 if (graph.getDestinationNode().getFrom() == null || count == 1) {
                     System.out.println("No path found");
                 } else {
+                    
                     int tid = graph.getDestinationNode().getTime();
                     System.out.println("Time: " + tid);
                     int tt = tid / 360000; tid -= 360000 * tt;

@@ -319,7 +319,7 @@ import java.util.List;
             prikk = new MapMarkerDot(rutelag, grad(node.getVector().getLatitude()), grad(node.getVector().getLongitude()));
             map().addMapMarker(prikk);
             prikk.getStyle().setBackColor(color);
-            node = (Node) ((Pre) node.getData()).get_pre();
+            node = node.getFrom();
             noder++;
         }
         
@@ -352,7 +352,7 @@ import java.util.List;
 
                  source = graph.getNodes()[Integer.parseInt(txt_fra.getText())];
                 destination = graph.getNodes()[Integer.parseInt(txt_til.getText())];
-                graph.dijkstra(source, destination);
+                graph.dijkstra(source.getId(), destination.getId());
                 alg = "Dijkstras algoritme ";
                 draw_algorithm(tur, alg, tid1, destination);
                  //Dijkstra.calculateShortestPathFromSource(graph.getSourceNode(), graph.getDestinationNode(), graph.getNumberOfNodes(), graph.getNodes());
@@ -432,10 +432,10 @@ import java.util.List;
      private void draw_algorithm(String tur, String alg, Date tid1, Node node) {
             Date tid2 = new Date();
          
-            if (node.getData() == null) {
+            if (node.getFrom() == null) {
                 tur += "  Fant ikke veien!";
             } else {
-                int tid = node.getData().get_time();
+                int tid = node.getTime();
                 int tt = tid / 360000; tid -= 360000 * tt;
                 int mm = tid / 6000; tid -= 6000 * mm;
                 int ss = tid / 100;
@@ -556,7 +556,8 @@ import java.util.List;
      List<double[]> nodeList = graph.read_from_file("island/noder.txt");
      List<double[]> edgeList = graph.read_from_file("island/kanter.txt");
      Map<Integer, InterestPoint> interestPoints = graph.read_interest_points("island/interessepkt.txt");
-     graph.init_graph(nodeList, edgeList, interestPoints);
+     int[] landmarkIds = new int[]{1432, 50010, 109221};
+     graph.init_graph(nodeList, edgeList, interestPoints, landmarkIds);
 
      
         //Les inn noder og kanter fra fil

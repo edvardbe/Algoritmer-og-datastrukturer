@@ -43,6 +43,7 @@ public class Graph {
     
     
         public void dijkstra(int sourceId, int destinationId){
+            Set<Node> visitedNodes = new HashSet<>();
             Node source = nodes[sourceId];
             this.numberOfProcessed = 0;
             pq = create_dijkstra_queue();
@@ -54,12 +55,13 @@ public class Graph {
                 /* MapMarkerDot marker = new MapMarkerDot(layer, grad(n.getVector().getLatitude()), grad(n.getVector().getLongitude()));
                 marker.getStyle().setBackColor(Color.RED);
                 map.addMapMarker(marker); */
+                visitedNodes.add(n);
                 numberOfProcessed++;
                 if (n.getId() == destinationId){
                     break;
                 }
                 for (Edge e = n.getEdge(); e != null; e = e.getNext()){
-                    if(!n.getVisited()){
+                    if(!visitedNodes.contains(e.getTo())){
                         shorten_dijk(n, e, pq);
                     }
                 }
@@ -68,7 +70,6 @@ public class Graph {
     
         public void alt(Node source, Node destination){
             Set<Node> visitedNodes = new HashSet<>();
-            System.out.println(from_landmarks.get(0)[0] + " " + from_landmarks.get(0)[1] + " " + from_landmarks.get(0)[2]);
             this.numberOfProcessed = 0;
             pq = create_alt_queue(source.getId(), destination.getId(), numberOfLandmarks);
             

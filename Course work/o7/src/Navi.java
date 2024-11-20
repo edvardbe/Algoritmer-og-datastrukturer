@@ -553,10 +553,10 @@ import java.util.List;
          //Les inn kart, og
          //opprett grafen
      Graph graph = new Graph();
-     List<double[]> nodeList = graph.read_from_file("island/noder.txt");
-     List<double[]> edgeList = graph.read_from_file("island/kanter.txt");
-     Map<Integer, InterestPoint> interestPoints = graph.read_interest_points("island/interessepkt.txt");
-     int[] landmarkIds = new int[]{1432, 50010, 109221};
+     List<double[]> nodeList = graph.read_from_file("noder.txt");
+     List<double[]> edgeList = graph.read_from_file("kanter.txt");
+     Map<Integer, InterestPoint> interestPoints = graph.read_interest_points("interessepkt.txt");
+     int[] landmarkIds = new int[]{478452, 2531818, 1361309, 5542364}; //{1432, 50010, 109221};
      graph.init_graph(nodeList, edgeList, interestPoints, landmarkIds);
 
      

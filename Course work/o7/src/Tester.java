@@ -6,9 +6,9 @@ public class Tester {
     public static void main(String[] args) {
         Graph graph = new Graph();
 
-        List<double[]> nodeList = graph.read_from_file("island/noder.txt");
-        List<double[]> edgeList = graph.read_from_file("island/kanter.txt");
-        Map<Integer, InterestPoint> interestPoints = graph.read_interest_points("island/interessepkt.txt");
+        List<double[]> nodeList = graph.read_from_file("noder.txt");
+        List<double[]> edgeList = graph.read_from_file("kanter.txt");
+        Map<Integer, InterestPoint> interestPoints = graph.read_interest_points("interessepkt.txt");
 
         System.out.println("Graph initialized");
         System.out.println("\n ------------- \n");
@@ -16,7 +16,7 @@ public class Tester {
         Node destination;
         java.util.Scanner scanner = new java.util.Scanner(System.in);
         graph = new Graph();
-        int[] landmarkIds = new int[]{1432, 50010, 109221};
+        int[] landmarkIds = new int[]{478452, 2531818, 1361309, 5542364}; //{1432, 50010, 109221};
         graph.init_graph(nodeList, edgeList, interestPoints, landmarkIds);
         while (true) {
             graph.reset();
@@ -33,7 +33,7 @@ public class Tester {
 
                 } else if(input.equals("m")) {
                     graph.make_landmarks(graph.getLandmarkIds(), "fra-landemerker.txt");
-                    graph.readInverseEdges("island/kanter.txt");
+                    graph.readInverseEdges("kanter.txt");
                     graph.make_landmarks(graph.getLandmarkIds(), "til-landemerker.txt");
                     /* graph.make_landmarks(new int[]{478452, 2531818, 1361309, 5542364}, "fra-landemerker.txt");
                     Graph inverse = graph;

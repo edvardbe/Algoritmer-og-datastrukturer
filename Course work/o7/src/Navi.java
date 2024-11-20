@@ -300,32 +300,78 @@ import java.util.List;
      }
  
      //Tegn ruta på kartet
-     public void tegn_ruta(Color color) {
+     public void tegn_ruta() {
  /*
      F.eks. ved å starte med målnoden, og følge forgjengere hele veien
          tilbake til startnoden. Nodene har bredde- og lengdegrader, som 
          fungerer med MapMarkerDot:
  */     
 
-        Node node = destination;//graph.getDestinationNode();
-        noder = 0;
-        
-        while (node != null) {
-            MapMarkerDot prikk;
-            prikk = new MapMarkerDot(rutelag, grad(node.getVector().getLatitude()), grad(node.getVector().getLongitude()));
-            map().addMapMarker(prikk);
-            prikk.getStyle().setBackColor(color);
+            Node node = destination;
+            noder = 0;
+            MapMarkerDot marker = new MapMarkerDot(
+                        rutelag, 
+                        grad(node.getVector().getLatitude()), 
+                        grad(node.getVector().getLongitude()));
+            marker.getStyle().setBackColor(Color.RED); // Outline color
+            map().addMapMarker(marker);
             node = node.getFrom();
             noder++;
+            
+            while (node != null) {
+                if(node.getFrom() == null) {
+                    marker = new MapMarkerDot(
+                        rutelag, 
+                        grad(node.getVector().getLatitude()), 
+                        grad(node.getVector().getLongitude()));
+                    marker.getStyle().setBackColor(Color.BLUE); // Fill color
+                    map().addMapMarker(marker);
+                    node = null;
+                    noder++;
+                    break;
+                }else{
+                    marker = new MapMarkerDot(
+                        rutelag, 
+                        grad(node.getVector().getLatitude()), 
+                        grad(node.getVector().getLongitude()));
+                    marker.getStyle().setBackColor(Color.YELLOW); // Fill color
+                    map().addMapMarker(marker);
+                    node = node.getFrom();
+                    noder++;
+                }
         }
         
-        /* for (Node n : vei) {
-            MapMarkerDot prikk;
-            prikk = new MapMarkerDot(rutelag, grad(n.getVector().getLatitude()), grad(n.getVector().getLongitude()));
-            map().addMapMarker(prikk);
         }
-        System.out.println("Destination node (x, y): (" + graph.getDestinationNode().getVector().getLatitude() + ", " + graph.getDestinationNode().getVector().getLongitude() + ")"); */
-     }
+
+        public void tegn_interessepunkt() {
+            Node node = destination;
+            noder = 0;
+            MapMarkerDot marker = new MapMarkerDot(
+                        rutelag, 
+                        grad(node.getVector().getLatitude()), 
+                        grad(node.getVector().getLongitude()));
+                    marker.getStyle().setBackColor(Color.RED); // Outline color
+                    map().addMapMarker(marker);
+                    node = node.getFrom();
+            noder++;
+            
+            while (node != null) {
+                if(node.getFrom() == null) {
+                    marker = new MapMarkerDot(
+                        rutelag, 
+                        grad(node.getVector().getLatitude()), 
+                        grad(node.getVector().getLongitude()));
+                    marker.getStyle().setBackColor(Color.BLUE); // Fill color
+                    map().addMapMarker(marker);
+                    node = null;
+                    noder++;
+                }else{
+                    node = node.getFrom();
+                    noder++;
+                }
+            }
+            
+        }
  
      //Tegn det gjennomsøkte arealet, altså alle noder med forgjengere.
      public void tegn_areal() {
@@ -382,7 +428,6 @@ import java.util.List;
                 System.out.println("Number of interestpoints: " + closestInterestPoints.length);
                 tur = "Tider fra " + txt_fra.getText() + ": ";
                 alg = interestPointTypes.get(interestPointCode) + ": ";
-                Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW};
                 for (int i = 0; i < closestInterestPoints.length; i++) {
                     destination = closestInterestPoints[i];
                     InterestPoint interestPoint = (InterestPoint) destination;
@@ -395,7 +440,7 @@ import java.util.List;
                     tur += String.format("%d:%02d:%02d,%02d", tt, mm, ss, hs) + " | ";
                     
                     // Set the color for each route
-                    tegn_ruta(colors[i]);
+                    tegn_interessepunkt();
                 }
                 System.out.println(alg);
                 System.out.println(tur);
@@ -430,7 +475,7 @@ import java.util.List;
                 int mm = tid / 6000; tid -= 6000 * mm;
                 int ss = tid / 100;
                 int hs = tid % 100;
-                tegn_ruta(Color.YELLOW);
+                tegn_ruta();
                 tur = String.format("%s Kjøretid %d:%02d:%02d,%02d, antall noder: %d", tur, tt, mm, ss, hs, this.noder);
 
             }

@@ -370,35 +370,29 @@ import java.util.List;
                 graph.setSourceNode(graph.getNodes()[Integer.parseInt(txt_fra.getText())]);
                 String selectedType = (String) interestPointDropdown.getSelectedItem();
                 int interestPointCode = Integer.parseInt(selectedType.split(" - ")[0]);
-                Node[] closestInterestPoints = graph.find_closest_interestpoints(graph.getSourceNode(), interestPointCode, graph.getNodes());
-                System.out.println("Number of interestpoints: " + closestInterestPoints.length);
-                tur = "Tider - " + txt_fra.getText() + ":";
-                alg = "Noder: ";
-                Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW};
-                for (int i = 0; i < closestInterestPoints.length; i++) {
-                    destination = closestInterestPoints[i];
-                    InterestPoint interestPoint = (InterestPoint) destination;
-                    Map<Integer, String> interestPointTypes = new HashMap<>();
+                Node[] closestInterestPoints = graph.find_closest_interestpoints(graph.getSourceNode(), interestPointCode);
+                Map<Integer, String> interestPointTypes = new HashMap<>();
                     interestPointTypes.put(1, "Stedsnavn");
                     interestPointTypes.put(2, "Bensinstasjon");
                     interestPointTypes.put(4, "Ladestasjon");
                     interestPointTypes.put(8, "Spisested");
                     interestPointTypes.put(16, "Drikkested");
                     interestPointTypes.put(32, "Overnattingsted");
-                    int type = interestPoint.getType();
-                    alg += interestPoint.getDescription() + ": ";
-                    for (Map.Entry<Integer, String> entry : interestPointTypes.entrySet()) {
-                        if ((type & entry.getKey()) != 0) {
-                            alg += " " + entry.getValue();
-                        }
-                    }
-                    alg += " | ";
+                    
+                System.out.println("Number of interestpoints: " + closestInterestPoints.length);
+                tur = "Tider fra " + txt_fra.getText() + ": ";
+                alg = interestPointTypes.get(interestPointCode) + ": ";
+                Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW};
+                for (int i = 0; i < closestInterestPoints.length; i++) {
+                    destination = closestInterestPoints[i];
+                    InterestPoint interestPoint = (InterestPoint) destination;
+                    alg += interestPoint.getDescription() + " | ";
                     int tid = interestPoint.getTime();
                     int tt = tid / 360000; tid -= 360000 * tt;
                     int mm = tid / 6000; tid -= 6000 * mm;
                     int ss = tid / 100;
                     int hs = tid % 100;
-                    tur += String.format("  %d:%02d:%02d,%02d  %d", tt, mm, ss, hs, destination.getDistance()) + " | ";
+                    tur += String.format("%d:%02d:%02d,%02d", tt, mm, ss, hs) + " | ";
                     
                     // Set the color for each route
                     tegn_ruta(colors[i]);

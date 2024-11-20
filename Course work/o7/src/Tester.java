@@ -77,10 +77,17 @@ public class Tester {
                     System.out.println("16: drikkested");
                     System.out.println("32: overnattingssted");
                     input = scanner.nextLine();
-                    Node[] closestInterestPoints = graph.find_closest_interestpoints(source, Integer.parseInt(input), graph.getNodes());
+                    Node[] closestInterestPoints = graph.find_closest_interestpoints(source, Integer.parseInt(input));
                     for (Node node : closestInterestPoints) {
                         if (node != null) {
-                            System.out.println("Interest point: " + node.getId());
+                            int tid = node.getTime();
+                            System.out.println("Time: " + tid);
+                            int tt = tid / 360000; tid -= 360000 * tt;
+                            int mm = tid / 6000; tid -= 6000 * mm;
+                            int ss = tid / 100;
+                            int hs = tid % 100;
+                            String tur = String.format("Kjøretid %d:%02d:%02d,%02d  ", tt, mm, ss, hs);
+                            System.out.println("Interest point: " + node + " | " + tur);
                         }
                     }
                     continue;

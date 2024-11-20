@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Graph {
     private Node sourceNode;
@@ -124,7 +126,7 @@ public class Graph {
         }
         
     
-        public InterestPoint[] find_closest_interestpoints(Node source, int interest_point_code, Node[] nodes){
+        public InterestPoint[] find_closest_interestpoints(Node source, int interest_point_code){
             pq = new PriorityQueue<>(Comparator.comparingDouble(a -> a.getTime()));
             InterestPoint[] closestInterestPoints = new InterestPoint[4];
             Set<Node> visitedNodes = new HashSet<>();
@@ -135,18 +137,17 @@ public class Graph {
             // Initialize distances
             /* sourceNode.setDistance(0);
             sourceNode.setTime(0); */
-            sourceNode.getFrom().setTime(0);
+            source.setTime(0);
     
-            pq.add(sourceNode);
+            pq.add(source);
             while (!pq.isEmpty() && count < 4) {
                 Node currentNode = pq.poll();
-                visitedNodes.add(currentNode);
 
                 if (visitedNodes.contains(currentNode)) {
                     continue;
                 }
                 visitedNodes.add(currentNode);
-                if (currentNode.isInterestPoint() && !currentNode.equals(sourceNode)) {
+                if (currentNode.isInterestPoint() && !currentNode.equals(source)) {
                     InterestPoint interestPoint = (InterestPoint) currentNode;
                     if ((interestPoint.getType() & interest_point_code) != 0) {
                         closestInterestPoints[count] = interestPoint;
@@ -154,7 +155,9 @@ public class Graph {
                     }
                 }
                 for (Edge e = currentNode.getEdge(); e != null; e = e.getNext()) {
-                    shorten_dijk(currentNode, e, pq);
+                    if(!visitedNodes.contains(e.getTo())){
+                        shorten_dijk(currentNode, e, pq);
+                    }
                 }
             }
             return closestInterestPoints;
@@ -421,7 +424,7 @@ public class Graph {
             }
         } 
 
-    public Map<Integer, InterestPoint> read_interest_points(String path) {
+    /* public Map<Integer, InterestPoint> read_interest_points(String path) {
         Map<Integer, InterestPoint> interestPoints = new HashMap<>();
 
         try (BufferedReader b = new BufferedReader(new FileReader(path))) {
@@ -443,7 +446,34 @@ public class Graph {
         }
 
         return interestPoints;
+    } */
+
+
+
+public Map<Integer, InterestPoint> read_interest_points(String path) {
+    Map<Integer, InterestPoint> interestPoints = new HashMap<>();
+    Pattern pattern = Pattern.compile("(\\d+)\\t(\\d+)\\t\"(.*)\""); // Regular expression to parse the line
+
+    try (BufferedReader b = new BufferedReader(new FileReader(path))) {
+        String line;
+        while ((line = b.readLine()) != null) {
+            Matcher matcher = pattern.matcher(line);
+            if (matcher.matches()) {
+                int nodeNumber = Integer.parseInt(matcher.group(1));
+                int code = Integer.parseInt(matcher.group(2));
+                String name = matcher.group(3); // Get the full name between quotes
+
+                InterestPoint interestPoint = new InterestPoint(nodeNumber, code, name);
+                interestPoints.put(nodeNumber, interestPoint);
+            }
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
     }
+
+    return interestPoints;
+}
+
     
     public void make_landmarks(int[] landmarkIds, String path){
         /*  Map<String, Node> landmarks = new HashMap<>();

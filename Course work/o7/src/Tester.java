@@ -6,32 +6,43 @@ public class Tester {
     public static void main(String[] args) {
         Graph graph = new Graph();
 
+        System.out.println("\n - Reading graph - ");
+        System.out.println("\nThis may take a while...\n");
+
         List<double[]> nodeList = graph.read_from_file("noder.txt");
         List<double[]> edgeList = graph.read_from_file("kanter.txt");
         Map<Integer, InterestPoint> interestPoints = graph.read_interest_points("interessepkt.txt");
-
-        System.out.println("Graph initialized");
-        System.out.println("\n ------------- \n");
+        System.out.println("----------------");
+        System.out.println(" - Graph read - ");
+        System.out.println("----------------");
         Node source;
         Node destination;
         java.util.Scanner scanner = new java.util.Scanner(System.in);
         graph = new Graph();
         int[] landmarkIds = new int[]{478452, 2531818, 1361309, 5542364}; //{1432, 50010, 109221};
         graph.init_graph(nodeList, edgeList, interestPoints, landmarkIds);
+
+        System.out.println("\n - Initializing graph - \n");
+
+
+        System.out.println("-----------------------");
+        System.out.println(" - Graph initialized - ");
+        System.out.println("-----------------------");
         while (true) {
             graph.reset();
-            System.out.println("\n ------------- \n");
-            System.out.println("Press 'x' to exit, 'm' to make landmark files, 'i' to init graph");
+            System.out.println("Press 'x' to exit, 'm' to make landmark files");
             System.out.println("Select source node: ");
             try {
                 String input = scanner.nextLine();
                 if (input.equals("x")) {
                     break;
-                } else if(input.equals("i")) {
-                    graph.init_graph(nodeList, edgeList, interestPoints, landmarkIds);
-                    continue;
-
                 } else if(input.equals("m")) {
+                    System.out.println("This requires large amounts of memory and time.");
+                    System.out.println("Are you sure you want to proceed? (y/n)");
+                    input = scanner.nextLine();
+                    if (!input.equals("y")) {
+                        continue;
+                    }
                     graph.make_landmarks(graph.getLandmarkIds(), "fra-landemerker.txt");
                     graph.readInverseEdges("kanter.txt");
                     graph.make_landmarks(graph.getLandmarkIds(), "til-landemerker.txt");
@@ -39,6 +50,7 @@ public class Tester {
                     Graph inverse = graph;
                     inverse.inverse_graph();
                     inverse.make_landmarks(new int[]{478452, 2531818, 1361309, 5542364}, "til-landemerker.txt"); */
+                    graph.init_graph(nodeList, edgeList, interestPoints, landmarkIds);
                     continue;
                 } 
                 source = graph.getNodes()[Integer.parseInt(input)];

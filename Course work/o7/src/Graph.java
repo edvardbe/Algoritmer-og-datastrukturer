@@ -1,13 +1,10 @@
-import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,10 +12,6 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.StringTokenizer;
-
-import org.openstreetmap.gui.jmapviewer.JMapViewer;
-import org.openstreetmap.gui.jmapviewer.Layer;
-import org.openstreetmap.gui.jmapviewer.MapMarkerDot;
 
 public class Graph {
     private Node sourceNode;
@@ -75,10 +68,11 @@ public class Graph {
             
             source.setTime(0);
             source.setDistance(0);
-            /* source.getData().full_time = 0;
-            source.getData().time_to_end = calculateALTHeuristic(source.getId(), destination.getId());
-            source.getData().distance = 0; */
+            source.setFullTime(0);
+            source.setTimeToEnd(0);
+            source.setDistance(0);
             pq.add(source);
+            System.out.println("Number of landmarks: " + numberOfLandmarks);
             while (!pq.isEmpty()){
                 numberOfProcessed++;
                 Node node = pq.poll();
@@ -92,7 +86,7 @@ public class Graph {
                 
                 for (Edge edge = node.getEdge(); edge != null; edge = edge.getNext()){
                     if(!pq.contains(edge.getTo()) && !visitedNodes.contains(edge.getTo())){
-                        edge.getTo().setTimeToEnd(estimate(edge.getTo().getId(), destination.getId()));//calculateALTHeuristic(e.getTo().getId(), destination.getId());
+                        edge.getTo().setTimeToEnd(heuristicEstimate(edge.getTo().getId(), destination.getId()));//heuristicEstimate(e.getTo().getId(), destination.getId());
                     }
                     shorten_alt(node, edge, pq);
                 }
@@ -106,7 +100,7 @@ public class Graph {
         private PriorityQueue<Node> create_alt_queue(int sourceId, int destinationId, int numberOfLandmarks) {
             return new PriorityQueue<>((a, b) -> a.getFullTime() - b.getFullTime());
         }
-        private int calculateALTHeuristic(int sourceId, int destinationId) {
+        private int heuristicEstimate(int sourceId, int destinationId) {
             int max = 0;
             for (int i = 0; i < numberOfLandmarks; i++){
                 int timeLD = from_landmarks.get(destinationId)[i]; // Landmark to Destination
@@ -114,45 +108,12 @@ public class Graph {
                 int timeDL = to_landmarks.get(destinationId)[i]; // Destination to Landmark
                 int timeSL = to_landmarks.get(sourceId)[i];      // Source to Landmark
                 int from = Math.max(timeLD - timeLS, 0);
-                int to = Math.max(timeDL - timeSL, 0);
-                if (from > max) {
-                    max = from;
-                }
-                if (to > max) {
-                    max = to;
-                }
+                int to = Math.max(timeSL - timeDL, 0);
+                int tempMax = Math.max(from, to);
+                max = Math.max(max, tempMax);
             }
             // Use triangular difference
             return max;
-        }
-
-        public int estimate(int currentNode, int endNode) {
-            int currentBest = 0;
-            for(int i = 0; i < 3; i++) {
-                
-    
-                int var1 = from_landmarks.get(endNode)[i];
-                int var2 = from_landmarks.get(currentNode)[i];
-                int var3 = var1 - var2;
-                if(var3 < 0) {
-                    var3 = 0;
-                }
-    
-                int var4 = to_landmarks.get(currentNode)[i];
-                int var5 = to_landmarks.get(endNode)[i];;
-                int var6 = var4 - var5;
-    
-                int tempBest = 0;
-                if(var3 > var6) {
-                    tempBest = var3;
-                } else {
-                    tempBest = var6;
-                }
-                if(tempBest > currentBest) {
-                    currentBest = tempBest;
-                }
-            }
-            return currentBest;
         }
 
 
@@ -160,33 +121,6 @@ public class Graph {
             int id;
             int time;
             boolean from;
-        }
-        private Landmark selectLandmark(int sourceId, int destinationId){
-            int landmarkId = this.landmarkIds[0];            
-            int max = 0;
-            Landmark l = new Landmark();
-            for (int i = 0; i < numberOfLandmarks; i++){
-                int fromTime = from_landmarks.get(destinationId)[i] - from_landmarks.get(sourceId)[i];
-                int toTime = to_landmarks.get(destinationId)[i] - to_landmarks.get(sourceId)[i];
-                
-                l.id = i;
-                if(fromTime > 0 && fromTime > max){
-                    max = fromTime;
-                    landmarkId = i;
-                    l.from = true;
-                } else if(toTime > 0 && toTime > max){
-                    max = toTime;
-                    landmarkId = i;
-                    l.from = false;
-                }
-                
-                l.time = max;
-                
-                System.out.println("Landmark: " + i + " Time: " + max);
-            }
-            System.out.println("Selected landmark: " + landmarkId + " Time: " + max);
-            
-            return l;
         }
         
     
@@ -300,6 +234,7 @@ public class Graph {
             this.landmarkIds = landmarkIds;
             this.numberOfNodes = (int) nodeList.get(0)[0];
             this.numberOfEdges = (int) edgeList.get(0)[0];
+            this.numberOfLandmarks = landmarkIds.length;
             this.nodes = new Node[numberOfNodes];
             for (int i = 1; i < numberOfNodes + 1; i++) {
                 int key = (int) nodeList.get(i)[0];
@@ -349,42 +284,8 @@ public class Graph {
                     toNode.setEdge(newEdge);
                 }
             }
+            reader.close();
         }
-    
-        /* public void inverse_graph() {
-            // Create an array to temporarily store the reversed edges
-            List<Edge>[] reversedEdges = new ArrayList[numberOfNodes];
-            for (int i = 0; i < numberOfNodes; i++) {
-                reversedEdges[i] = new ArrayList<>();
-            }
-        
-            // Traverse all nodes and reverse their edges
-            for (int from = 0; from < numberOfNodes; from++) {
-                Node currentNode = nodes[from];
-                if (currentNode != null) {
-                    Edge edge = currentNode.getEdge();
-                    while (edge != null) {
-                        int to = edge.getTo().getId();
-                        // Add the reversed edge to the appropriate node
-                        reversedEdges[to].add(new Edge(currentNode, null, edge.getDriveTime(), edge.getDistance(), edge.getSpeedLimit()));
-                        edge = edge.getNext();
-                    }
-                }
-            }
-        
-            // Clear the original edges and set the reversed edges
-            for (int i = 0; i < numberOfNodes; i++) {
-                Node currentNode = nodes[i];
-                if (currentNode != null) {
-                    currentNode.setEdge(null); // Clear original edges
-                    for (Edge reversedEdge : reversedEdges[i]) {
-                        reversedEdge.setNext(currentNode.getEdge());
-                        currentNode.setEdge(reversedEdge);
-                    }
-                }
-            }
-        }
-         */
     
         public void print_graph(){
             for (Node node : nodes) {
@@ -486,8 +387,10 @@ public class Graph {
                 b.close();
             } catch (FileNotFoundException f){
                 System.out.println("File not found: " + f.getMessage());
+                f.printStackTrace();
             } catch (IOException e) {
                 System.out.println("An error occured: " + e.getMessage());
+                e.printStackTrace();
             }
             return list;
         }
@@ -497,7 +400,6 @@ public class Graph {
             try {
                 BufferedReader b = new BufferedReader(new FileReader(path));
                 String line;
-                int count = 0;
                 while ((line = b.readLine()) != null) {
                     List<String> filteredTokens = filterEmptyTokens(line);
                     int[] parsedLine = new int[filteredTokens.size()];
@@ -505,7 +407,6 @@ public class Graph {
                         parsedLine[i] = Integer.parseInt(filteredTokens.get(i));
                     }
                     list.add(parsedLine);
-                    count++;
                 }
                 b.close();
             }catch (FileNotFoundException f){
@@ -517,10 +418,6 @@ public class Graph {
                 from_landmarks = list;
             } else {
                 to_landmarks = list;
-            }
-            System.out.println("Landmarks initialized");
-            for (int i = 0; i < this.landmarkIds.length; i++){
-                System.out.println("Landmark " + i + ": " + this.landmarkIds[i]);
             }
         } 
 
@@ -598,6 +495,8 @@ public class Graph {
         for (Node n : nodes){
             n.setFrom(null);
             n.setTime(Integer.MAX_VALUE);
+            n.setTimeToEnd(Integer.MAX_VALUE);
+            n.setFullTime(Integer.MAX_VALUE);
             n.setDistance(Integer.MAX_VALUE);
             n.setVisited(false);
         }

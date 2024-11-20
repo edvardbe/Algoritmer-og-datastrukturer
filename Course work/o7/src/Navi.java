@@ -19,17 +19,14 @@
 
  */
 
- import java.io.*;
-import java.util.ArrayList;
+
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.List;
  
  //GUI
  import javax.swing.*; //Vinduer
- import javax.swing.text.*;
  import javax.swing.event.*;
  import java.awt.*;
  import java.awt.event.*;
@@ -39,7 +36,6 @@ import java.util.List;
  
  import org.openstreetmap.gui.jmapviewer.events.JMVCommandEvent;
  import org.openstreetmap.gui.jmapviewer.interfaces.JMapViewerEventListener;
- import org.openstreetmap.gui.jmapviewer.interfaces.MapPolygon;
  import org.openstreetmap.gui.jmapviewer.interfaces.TileLoader;
  import org.openstreetmap.gui.jmapviewer.interfaces.TileSource;
  import org.openstreetmap.gui.jmapviewer.tilesources.BingAerialTileSource;

@@ -165,7 +165,7 @@ public class Exercise3 {
         for (internalLow = low, internalHigh = high - 1;;){
             while(arr[++internalLow] < medianValue);
             while(arr[--internalHigh] > medianValue);
-            if(internalLow >= internalHigh) break;
+
         
             swap(arr, internalLow, internalHigh);;    
         }

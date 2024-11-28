@@ -1,10 +1,12 @@
 import java.io.IOException;
+import java.beans.beancontext.BeanContext;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.PriorityQueue;
 
 class Node {
@@ -63,7 +65,7 @@ class HuffmanComparator implements Comparator<Node>{
 }
 
 public class Huffman {
-
+    static final int NUMBER_OF_BYTES = 2;
     /**
      * Compresses an arbitrary file with Huffman-code.
      * 
@@ -87,9 +89,15 @@ public class Huffman {
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(outStream);
 
-        for (int frequency : frequencies) {
+        /* for (int frequency : frequencies) {
             out.writeInt(frequency);
-        }
+        } */
+
+        for (Integer code : frequencies) {
+            for (int j = 0; j < NUMBER_OF_BYTES; j++) {
+              out.write((code >> (8 * j)) & 0xFF);
+            }
+          }
         // Write byte is int to be able to preform bitwise operations
         int writeByte = 0;
         int bitIteration = 0;
@@ -166,8 +174,21 @@ public class Huffman {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(input_bytes);
         DataInputStream in = new DataInputStream(inputStream);
         // Read the frequencies of each character
-        for (int i = 0; i < length; i++) {
-            frequencies[i] = in.readInt();
+        /* for (int i = 0; i < length; i++) {
+            int value = in.readInt();
+            frequencies[i] = value;
+            System.out.println("Index: " + i + ", Value: " + value);
+
+        } */
+       System.out.println("Length: " + length * NUMBER_OF_BYTES);
+
+        for (int i = 0; i < length * NUMBER_OF_BYTES; i += NUMBER_OF_BYTES) {
+            int value = 0;
+            for (int j = 0; j < NUMBER_OF_BYTES; j++) {
+                value |= (in.readByte() & 0xFF) << (8 * j);
+            }
+            System.out.println("Index: " + i / NUMBER_OF_BYTES + ", Value: " + value);
+            frequencies[i / NUMBER_OF_BYTES] = value;
         }
         byte lastByteBits = in.readByte();
         
